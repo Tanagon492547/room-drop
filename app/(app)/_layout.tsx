@@ -1,19 +1,23 @@
+import LogoTitle from '@/components/ui/LogoTitle';
+import SearchFeature from '@/components/ui/SearchFeature';
 import { useColorScheme } from '@/components/useColorScheme';
 import { colors } from '@/constants/Colors';
 import { useSession } from '@/hooks/useAuth';
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Redirect } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
+import { DefaultTheme, DrawerActions, ThemeProvider } from '@react-navigation/native';
+import { Redirect, usePathname } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { StatusBar } from 'expo-status-bar';
-import { Text } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 
 
-const AppLayout =()=> {
+const AppLayout = () => {
   const colorScheme = useColorScheme();
   const { session, isLoading } = useSession();
+  const pathname = usePathname();
 
   if (isLoading) {
     return <Text>Loading...</Text>;
@@ -34,21 +38,29 @@ const AppLayout =()=> {
             headerStyle: {
               backgroundColor: colors.primary, // กำหนดสีพื้นหลัง Header ที่นี่
             },
-            headerTintColor:colors.textWhite,
+            headerTintColor: colors.textWhite,
           }}  >
           <Drawer.Screen
             name="(tabs)"
-            options={{
+            options={({ navigation }) => ({
               drawerLabel: 'Home',
-              title: 'overview',
-            }}
+              title: '',
+              headerShown: pathname !== '/search',
+              headerLeft: () => (
+                <TouchableOpacity
+                  onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+                  style={{ marginLeft: 15 }}
+                >
+                  <FontAwesome name="bars" size={30} color="white" />
+                </TouchableOpacity>
+              ),
+
+              headerTitle: () => <LogoTitle color='white' />,
+              headerRight: () => <SearchFeature />,
+              headerTitleAlign: 'center',
+            })}
           />
-          <Drawer.Screen
-            name="+not-found"
-            options={{
-              drawerItemStyle: { display: 'none' }, //ซ่อนหน้า +not-found ออกจากเมนู
-            }}
-          />
+
         </Drawer>
       </GestureHandlerRootView>
       <StatusBar style="auto" />
