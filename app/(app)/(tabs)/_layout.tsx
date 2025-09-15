@@ -20,7 +20,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarStyle: {
-          backgroundColor: colors.primaryTab, // <-- เปลี่ยนเป็นสีแดงตรงนี้
+          backgroundColor: colors.background, // <-- เปลี่ยนเป็นสีแดงตรงนี้
          },
         headerShown: false,
       }}>
@@ -51,6 +51,12 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+              href: null, 
+      }}
       />
     </Tabs>
   );
