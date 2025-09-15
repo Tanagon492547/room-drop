@@ -2,8 +2,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
+
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors, { colors } from '@/constants/Colors';
+import { Platform, StyleSheet } from 'react-native';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -12,7 +14,7 @@ function TabBarIcon(props: {
   return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
-export default function TabLayout() {
+const TabLayout =()=> {
   const colorScheme = useColorScheme();
 
   return (
@@ -21,10 +23,21 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarStyle: {
           backgroundColor: colors.background, // <-- เปลี่ยนเป็นสีแดงตรงนี้
-         },
+           ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -3 },
+                shadowOpacity: 0.1,
+                shadowRadius: 3,
+            },
+            android: {
+                elevation: 20,
+            },
+        }),
+        },
         headerShown: false,
       }}>
-        <Tabs.Screen
+      <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
@@ -42,7 +55,7 @@ export default function TabLayout() {
         name="booking"
         options={{
           title: 'Booking',
-          tabBarIcon: ({ color }) => <TabBarIcon  name="suitcase" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="suitcase" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -55,9 +68,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-              href: null, 
-      }}
+          href: null,
+        }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+   // ไม่มี
+})
+
+export default TabLayout;
