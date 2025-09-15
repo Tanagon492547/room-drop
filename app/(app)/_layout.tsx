@@ -55,7 +55,7 @@ const AppLayout = () => {
                 </TouchableOpacity>
               ),
 
-              headerTitle: () => <LogoTitle color='white' />,
+              headerTitle: () => <LogoTitle color='white' size={30} fontSize={10} />,
               headerRight: () => <SearchFeature />,
               headerTitleAlign: 'center',
             })}
