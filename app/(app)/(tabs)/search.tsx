@@ -1,14 +1,16 @@
 
-import { Text, View } from '@/components/Themed';
+import { View } from '@/components/Themed';
 import LogoTitle from '@/components/ui/LogoTitle';
+import { colors } from '@/constants/Colors';
 import { StyleSheet } from 'react-native';
 
 const Search =()=>{
   return (
      <View style={styles.container}>
       <LogoTitle color='black' />
-       <Text style={styles.title}>Search</Text>
-       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+          <View style={{width:360, borderRadius:10, minHeight:314, backgroundColor:colors.background}}>
+            
+          </View>       
      </View>
    );
  }
