@@ -124,10 +124,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent'
   },
   datesArea: {
-    flexDirection: 'row',      // <-- ✨ 1. สั่งให้ลูกเรียงกันแนวนอน
-    justifyContent: 'space-between', // <-- ✨ 2. สั่งให้ลูกแยกกันไปอยู่สุดขอบ
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
     width: '100%',
-    paddingHorizontal: '5%', // (แนะนำ) เพิ่ม padding เพื่อให้สวยงาม
+    paddingHorizontal: '5%', 
     alignItems: 'center',
     backgroundColor: 'transparent'
   },

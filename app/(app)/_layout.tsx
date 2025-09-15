@@ -8,7 +8,7 @@ import { DefaultTheme, DrawerActions, ThemeProvider } from '@react-navigation/na
 import { Redirect, usePathname } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { StatusBar } from 'expo-status-bar';
-import { Text, TouchableOpacity } from 'react-native';
+import { Platform, Text, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
@@ -37,6 +37,17 @@ const AppLayout = () => {
             drawerStyle: {}, //เปลี่ยนสีพืนหลัง
             headerStyle: {
               backgroundColor: colors.primary, // กำหนดสีพื้นหลัง Header ที่นี่
+               ...Platform.select({
+                            ios: {
+                                shadowColor: '#000000ff',
+                                shadowOffset: { width: 0, height: -3 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 3,
+                            },
+                            android: {
+                                elevation: 50,
+                            },
+                        }),
             },
             headerTintColor: colors.textWhite,
           }}  >
