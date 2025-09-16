@@ -1,9 +1,9 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
+import AvatarProfile from "./AvatarProfile";
 
 type props = {
   email : string | undefined,
@@ -15,6 +15,8 @@ const Profile = ({email, password}:props) => {
   const [userLname, setUserLname] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userPropPay, setUserPropPay] = useState('');
+  const [urlImage, setUrlImage] = useState('');
+
 
   const doStatusMatch = useMemo(()=>{
     if (!userFname || !userLname || !userPhone || !userPropPay) return true;
@@ -35,6 +37,10 @@ const Profile = ({email, password}:props) => {
     router.replace('/login')
   }
 
+  const backPage =()=>{
+    router.back();
+  }
+
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.selectProfile}>
@@ -43,12 +49,7 @@ const Profile = ({email, password}:props) => {
         </Pressable>
       </View>
 
-      <View style={styles.cardBody}>
-        <Image
-          source={{ uri: 'https://as1.ftcdn.net/jpg/03/46/83/96/1000_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg' }}
-          style={styles.avatar}
-        />
-      </View>
+     <AvatarProfile urlImage={urlImage} width={190} height={190} />
 
       <View style={styles.formContarin}>
         <View style={styles.formCard}>
@@ -115,7 +116,7 @@ const Profile = ({email, password}:props) => {
           mode="contained"
           buttonColor='red'
           contentStyle={{ width: '50%' }}
-          onPress={() => console.log('Pressed')}
+          onPress={backPage}
           style={styles.button}    
         >
           <FontAwesome  name="times" size={23} />
@@ -131,6 +132,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     backgroundColor: 'transparent',
+    width:'100%'
   },
   selectProfile: {
     width: '100%',
