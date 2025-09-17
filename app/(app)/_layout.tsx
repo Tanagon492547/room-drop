@@ -71,6 +71,8 @@ const AppLayout = () => {
               headerTitleAlign: 'center',
             })}
           />
+          <Drawer.Screen name="search" options={{ drawerLabel: 'Search' }} />
+          <Drawer.Screen name="Logout" options={{ drawerLabel: 'Logout' }} />
 
         </Drawer>
       </GestureHandlerRootView>
