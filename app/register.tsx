@@ -1,10 +1,10 @@
-import { colors } from "@/constants/Colors";
-import { FontAwesome } from '@expo/vector-icons';
+import { colors } from "@/constants/Colors"; // สมมติว่า path ถูกต้อง
+import { auth } from "@/constants/firebaseConfig"; // ✨ 1. Import auth จาก Firebase config
 import { router } from "expo-router";
+import { createUserWithEmailAndPassword } from "firebase/auth"; // ✨ 2. Import ฟังก์ชันสมัครสมาชิก
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -13,32 +13,51 @@ const Register = () => {
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // ✨ 3. เพิ่ม State สำหรับ Loading
 
-  // คำนวณค่า Error และความพร้อมของฟอร์มโดยตรง ไม่ต้องใช้ useEffect
+  // --- VALIDATION LOGIC (ปรับปรุงใหม่) ---
   const isEmailValid = useMemo(() => {
-    if (!email) return true; // ยังไม่พิมพ์ ไม่ต้องโชว์ error
+    if (!email) return true;
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   }, [email]);
 
+  const isPasswordLengthValid = useMemo(() => {
+    return createPassword.length >= 6;
+  }, [createPassword]);
+
   const doPasswordsMatch = useMemo(() => {
-    if (!createPassword || !confirmPassword) return true;
     return createPassword === confirmPassword;
   }, [createPassword, confirmPassword]);
 
-  const isFormReady = email && createPassword && confirmPassword && isEmailValid && doPasswordsMatch;
+  const isFormReady = isEmailValid && isPasswordLengthValid && doPasswordsMatch;
 
-  const handleSubmit = () => {
+  // ✨ 4. ฟังก์ชันสมัครสมาชิกกับ Firebase จริง
+  const handleRegister = async () => {
     if (!isFormReady) return;
-    // ส่วนนี้จำลองเข้า ระบบ ชัวร์คราว
-    router.replace({
-      pathname: '/profilecreate',
-      params: {
-        email: email,
-        password: confirmPassword
-      },
-    });
+    setIsLoading(true); // เริ่ม loading
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, confirmPassword);
+      console.log('สมัครสมาชิกสำเร็จ!', userCredential.user.uid);
+      Alert.alert('สำเร็จ', 'คุณได้สมัครสมาชิกเรียบร้อยแล้ว');
+      // เมื่อสำเร็จ ให้ redirect ไปหน้าสร้างโปรไฟล์
+      router.replace({
+        pathname: '/profilecreate',
+        params: { email: email},
+      });
+    } catch (error: any) {
+      console.error('สมัครสมาชิกล้มเหลว:', error);
+      // แสดงข้อความ Error ที่เข้าใจง่ายขึ้น
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert('ผิดพลาด', 'อีเมลนี้ถูกใช้งานแล้ว');
+      } else {
+        Alert.alert('ผิดพลาด', 'ไม่สามารถสมัครสมาชิกได้ โปรดลองอีกครั้ง');
+      }
+    } finally {
+      setIsLoading(false); // หยุด loading
+    }
   };
+
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#314071' }}>
@@ -48,26 +67,27 @@ const Register = () => {
             <Text style={styles.h1}>Create account</Text>
           </View>
           <View>
-
+            {/* ... Email Input ... */}
             <TextInput style={styles.inputCSS} placeholder="Email" value={email} onChangeText={setEmail} />
             {!isEmailValid && <Text style={{ color: 'red' }}>รูปแบบอีเมลไม่ถูกต้อง</Text>}
 
+            {/* ... Password Input ... */}
             <View style={{ position: 'relative' }}>
               <TextInput
                 style={styles.inputCSS}
-                placeholder="Password"
+                placeholder="Password (6 ตัวขึ้นไป)"
                 secureTextEntry={!isPasswordVisible}
                 value={createPassword}
                 onChangeText={setCreatePassword}
               />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-              >
-                <FontAwesome name={isPasswordVisible ? 'eye-slash' : 'eye'} size={22} color="grey" />
-              </TouchableOpacity>
+              {/* ... Eye Icon ... */}
             </View>
+            {/* ✨ 5. แสดง Error ความยาวรหัสผ่าน */}
+            {createPassword.length > 0 && !isPasswordLengthValid && (
+              <Text style={{ color: 'red' }}>รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</Text>
+            )}
 
+            {/* ... Confirm Password Input ... */}
             <View style={{ position: 'relative' }}>
               <TextInput
                 style={styles.inputCSS}
@@ -76,25 +96,21 @@ const Register = () => {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
               />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-              >
-                <FontAwesome name={isConfirmPasswordVisible ? 'eye-slash' : 'eye'} size={22} color="grey" />
-              </TouchableOpacity>
+              {/* ... Eye Icon ... */}
             </View>
+            {/* ✨ 6. แสดง Error รหัสผ่านไม่ตรงกัน */}
+            {confirmPassword.length > 0 && !doPasswordsMatch && (
+              <Text style={{ color: 'red' }}>รหัสผ่านไม่ตรงกัน</Text>
+            )}
           </View>
-
-          {!doPasswordsMatch && (<View><Text style={{ color: 'red' }}>รหัสไม่ถูกต้อง โปรดกรอกให้ตรงกันทั้งสอง</Text></View>)}
 
           <TouchableOpacity
             style={isFormReady ? styles.button : styles.disabledButton}
-            disabled={!isFormReady}
-            onPress={handleSubmit}
+            disabled={!isFormReady || isLoading} // ปิดปุ่มตอน loading ด้วย
+            onPress={handleRegister} // <-- เรียกใช้ฟังก์ชันใหม่
           >
-            <Text style={styles.h2}>Sign up</Text>
+            <Text style={styles.h2}>{isLoading ? 'กำลังสมัคร...' : 'Sign up'}</Text>
           </TouchableOpacity>
-
         </View>
       </View>
     </SafeAreaView>

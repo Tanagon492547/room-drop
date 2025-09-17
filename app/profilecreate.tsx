@@ -7,10 +7,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const ProfileCreate =()=>{
   const params = useLocalSearchParams();
   const email = Array.isArray(params.email) ? params.email[0] : params.email;
-   const password = Array.isArray(params.password) ? params.password[0] : params.password;
+   
   return(
     <SafeAreaView  style={styles.contrainer}>
-      <ProfileForm email={email} password={password} />
+      <ProfileForm email={email}  />
        <StatusBar style="auto" />
     </SafeAreaView>
   )
