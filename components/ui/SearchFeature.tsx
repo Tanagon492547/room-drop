@@ -4,7 +4,7 @@ import { Pressable } from "react-native";
 
 const SearchFeature = () => {
   return (
-    <Link href='/(app)/(tabs)/search' asChild>
+    <Link href='/search' asChild>
       <Pressable>
       {({ pressed }) => (
         <FontAwesome
