@@ -3,41 +3,47 @@ import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
+import RNPickerSelect from 'react-native-picker-select';
 import AvatarProfile from "./AvatarProfile";
 
 type props = {
-  email : string | undefined,
-  password : string | undefined
+  email: string | undefined,
+  password: string | undefined
 }
 
-const Profile = ({email, password}:props) => {
+const Profile = ({ email, password }: props) => {
   const [userFname, setUserFname] = useState('');
   const [userLname, setUserLname] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userPropPay, setUserPropPay] = useState('');
   const [urlImage, setUrlImage] = useState('');
+  const [gender, setGender] = useState('');
+
+  const genders = [
+    "ชาย", "หญิง"
+  ]
 
 
-  const doStatusMatch = useMemo(()=>{
+  const doStatusMatch = useMemo(() => {
     if (!userFname || !userLname || !userPhone || !userPropPay) return true;
     return true;
 
   }, [userFname, userLname, userPhone, userPropPay]);
 
-  const isFormReady =  userFname && userLname && userPhone && userPropPay && doStatusMatch;
+  const isFormReady = userFname && userLname && userPhone && userPropPay && doStatusMatch;
 
-  const selectingImage =()=>{
+  const selectingImage = () => {
     // ฟัังชันเรียกใช้ให้ User เลือกโปรไฟล์ที่นี่
     console.log("เปลี่ยนรูป")
   }
 
-  const sedingData =()=>{
+  const sedingData = () => {
     // ส่งข้อมูลเข้า ฐานข้อมูลที่นี่
     console.log('ส่งข้อมูล')
     router.replace('/login')
   }
 
-  const backPage =()=>{
+  const backPage = () => {
     router.back();
   }
 
@@ -49,16 +55,29 @@ const Profile = ({email, password}:props) => {
         </Pressable>
       </View>
 
-     <AvatarProfile urlImage={urlImage} width={190} height={190} />
+      <AvatarProfile urlImage={urlImage} width={190} height={190} />
 
       <View style={styles.formContarin}>
         <View style={styles.formCard}>
           <Text style={styles.h1}>ข้อมูลส่วนตัว</Text>
 
+
+          <View style={styles.select}>
+            <RNPickerSelect
+            onValueChange={(value) => console.log(value)}
+            placeholder={{ label: "เลือกเพศของคุณ...", value: gender }}
+            items={genders.map(gender => ({
+              label: gender,
+              value: gender,
+            }))}
+            style={pickerSelectStyles}
+          />
+          </View>
+
           <TextInput
             label="ชื่อ"
             placeholder="สมชาย"
-            value={userFname? userFname : ''}
+            value={userFname ? userFname : ''}
             onChangeText={setUserFname}
             mode='outlined'
             outlineStyle={{ borderRadius: 18 }}
@@ -67,7 +86,7 @@ const Profile = ({email, password}:props) => {
           <TextInput
             label="นามสกุล"
             placeholder="จึงรอด"
-            value={userLname? userLname : ''}
+            value={userLname ? userLname : ''}
             onChangeText={setUserLname}
             mode='outlined'
             outlineStyle={{ borderRadius: 18 }}
@@ -84,7 +103,7 @@ const Profile = ({email, password}:props) => {
           <TextInput
             label="หมายเลขมือถือ"
             placeholder="0875481934"
-            value={userPhone? userPhone : ''}
+            value={userPhone ? userPhone : ''}
             onChangeText={setUserPhone}
             mode='outlined'
             outlineStyle={{ borderRadius: 18 }}
@@ -93,7 +112,7 @@ const Profile = ({email, password}:props) => {
           <TextInput
             label="หมายเลขพร้อมเพย์"
             placeholder="เบอร์มือถือ หรือบัตรประชาชน 13 หลัก"
-            value={userPropPay? userPropPay : ''}
+            value={userPropPay ? userPropPay : ''}
             onChangeText={setUserPropPay}
             mode='outlined'
             outlineStyle={{ borderRadius: 18 }}
@@ -108,7 +127,7 @@ const Profile = ({email, password}:props) => {
           contentStyle={{ width: '50%' }}
           onPress={sedingData}
           disabled={!isFormReady}
-          style={styles.button}  
+          style={styles.button}
         >
           <FontAwesome name="check" size={20} />
         </Button>
@@ -117,9 +136,9 @@ const Profile = ({email, password}:props) => {
           buttonColor='red'
           contentStyle={{ width: '50%' }}
           onPress={backPage}
-          style={styles.button}    
+          style={styles.button}
         >
-          <FontAwesome  name="times" size={23} />
+          <FontAwesome name="times" size={23} />
         </Button>
       </View>
 
@@ -127,12 +146,32 @@ const Profile = ({email, password}:props) => {
   )
 }
 
-
+const pickerSelectStyles = StyleSheet.create({
+   inputIOS: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    color: 'black',
+    backgroundColor: '#fff', // <-- กำหนดสีพื้นหลัง
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    color: 'black',
+    backgroundColor: '#fff',
+  },
+  placeholder: {
+    color: 'grey',
+  },
+  iconContainer: {
+    top: 15,
+    right: 15,
+  },
+})
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     backgroundColor: 'transparent',
-    width:'100%'
+    width: '100%'
   },
   selectProfile: {
     width: '100%',
@@ -171,8 +210,15 @@ const styles = StyleSheet.create({
     display: 'flex',
     gap: 10,
   },
-  button:{
-    alignItems:'center'
+  button: {
+    alignItems: 'center'
+  },
+  select:{
+    width:'100%', 
+    borderWidth:1, 
+    borderRadius:18, 
+    borderColor:'gary',
+    opacity:0.5
   }
 })
 export default Profile;
