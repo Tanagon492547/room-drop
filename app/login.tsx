@@ -2,19 +2,37 @@ import AuthNavigationPrompt from "@/components/ui/AuthNavigationPrompt";
 import AuthSeparator from "@/components/ui/AuthSeparator";
 import SocialAuth from "@/components/ui/SocialAuth";
 import { colors } from "@/constants/Colors";
+import { auth } from "@/firebaseConfig";
 import { useSession } from "@/hooks/useAuth";
 import { FontAwesome } from '@expo/vector-icons';
 import Checkbox from "expo-checkbox";
 import { Link, router } from "expo-router";
-import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 
 
 const SignIn = () => {
   const { signIn } = useSession();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isChecked, setChecked] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const login = async () => {
+  try {
+    const email = `${username}@myapp.com`; // must match register
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log("Logged in:", userCredential.user.uid);
+    router.replace("/");
+  } catch (err: any) {
+    console.error("Login error:", err.message);
+  }
+};
+
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#314071' }}>
       <View style={styles.loginBg}>
@@ -23,10 +41,10 @@ const SignIn = () => {
             <Text style={styles.h1}>Login</Text>
           </View>
           <View>
-            <TextInput style={styles.inputCSS} placeholder="Usesrname" />
+            <TextInput style={styles.inputCSS} placeholder="Usesrname" value={username} onChangeText={setUsername} />
             <View style={{ position: 'relative' }}>
 
-              <TextInput style={styles.inputCSS} placeholder="password" secureTextEntry={!isPasswordVisible} />
+              <TextInput style={styles.inputCSS} placeholder="password" secureTextEntry={!isPasswordVisible} value={password} onChangeText={setPassword}/>
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setIsPasswordVisible(!isPasswordVisible)} // <-- กดเพื่อสลับ state
@@ -58,11 +76,10 @@ const SignIn = () => {
               </Text>
             </Link>
           </View>
-          <TouchableOpacity style={styles.button} onPress={() => {
-            // ส่วนนี้จำลองเข้า ระบบ ชัวร์คราว
-            signIn();
-            router.replace('/');
-          }}>
+
+          {error && <Text style={{ color: "red" }}>{error}</Text>}
+          
+          <TouchableOpacity style={styles.button} onPress={login}>
             <Text style={styles.h2}>Login</Text>
           </TouchableOpacity>
 
@@ -71,7 +88,7 @@ const SignIn = () => {
             linkText="Sign up"
             href="/register"
           />
-
+          
           <AuthSeparator />
 
           <SocialAuth />

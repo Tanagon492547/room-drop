@@ -1,43 +1,41 @@
+import AuthNavigationPrompt from "@/components/ui/AuthNavigationPrompt";
+import AuthSeparator from "@/components/ui/AuthSeparator";
+import SocialAuth from "@/components/ui/SocialAuth";
 import { colors } from "@/constants/Colors";
 import { FontAwesome } from '@expo/vector-icons';
 import { router } from "expo-router";
-import React, { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { auth, db } from "@/firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 const Register = () => {
-  const [email, setEmail] = useState('');
-  const [createPassword, setCreatePassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  // คำนวณค่า Error และความพร้อมของฟอร์มโดยตรง ไม่ต้องใช้ useEffect
-  const isEmailValid = useMemo(() => {
-    if (!email) return true; // ยังไม่พิมพ์ ไม่ต้องโชว์ error
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  }, [email]);
+  const register = async () => {
+  try {
+    // Use email + password to create auth user
+    const email = `${username}@myapp.com`; // 👈 Trick: convert username into email
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-  const doPasswordsMatch = useMemo(() => {
-    if (!createPassword || !confirmPassword) return true;
-    return createPassword === confirmPassword;
-  }, [createPassword, confirmPassword]);
-
-  const isFormReady = email && createPassword && confirmPassword && isEmailValid && doPasswordsMatch;
-
-  const handleSubmit = () => {
-    if (!isFormReady) return;
-    // ส่วนนี้จำลองเข้า ระบบ ชัวร์คราว
-    router.replace({
-      pathname: '/profilecreate',
-      params: {
-        email: email,
-        password: confirmPassword
-      },
+    // Save extra info in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      username,
+      createdAt: new Date(),
     });
+
+    console.log("User registered:", user.uid);
+    router.replace("/login");
+  } catch (err: any) {
+    console.error("Error registering:", err.message);
+  }
   };
 
   return (
@@ -47,54 +45,66 @@ const Register = () => {
           <View style={styles.textArea}>
             <Text style={styles.h1}>Create account</Text>
           </View>
-          <View>
 
-            <TextInput style={styles.inputCSS} placeholder="Email" value={email} onChangeText={setEmail} />
-            {!isEmailValid && <Text style={{ color: 'red' }}>รูปแบบอีเมลไม่ถูกต้อง</Text>}
+          <TextInput
+            style={styles.inputCSS}
+            placeholder="Username"
+            value={username}
+            onChangeText={setUsername}
+          />
 
-            <View style={{ position: 'relative' }}>
-              <TextInput
-                style={styles.inputCSS}
-                placeholder="Password"
-                secureTextEntry={!isPasswordVisible}
-                value={createPassword}
-                onChangeText={setCreatePassword}
+          <View style={{ position: 'relative' }}>
+            <TextInput
+              style={styles.inputCSS}
+              placeholder="Password"
+              secureTextEntry={!isPasswordVisible}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+            >
+              <FontAwesome
+                name={isPasswordVisible ? 'eye-slash' : 'eye'}
+                size={22}
+                color="grey"
               />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-              >
-                <FontAwesome name={isPasswordVisible ? 'eye-slash' : 'eye'} size={22} color="grey" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ position: 'relative' }}>
-              <TextInput
-                style={styles.inputCSS}
-                placeholder="Confirm Password"
-                secureTextEntry={!isConfirmPasswordVisible}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-              />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-              >
-                <FontAwesome name={isConfirmPasswordVisible ? 'eye-slash' : 'eye'} size={22} color="grey" />
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           </View>
 
-          {!doPasswordsMatch && (<View><Text style={{ color: 'red' }}>รหัสไม่ถูกต้อง โปรดกรอกให้ตรงกันทั้งสอง</Text></View>)}
+          <View style={{ position: 'relative' }}>
+            <TextInput
+              style={styles.inputCSS}
+              placeholder="Confirm Password"
+              secureTextEntry={!isPasswordVisible}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+            >
+              <FontAwesome
+                name={isPasswordVisible ? 'eye-slash' : 'eye'}
+                size={22}
+                color="grey"
+              />
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={isFormReady ? styles.button : styles.disabledButton}
-            disabled={!isFormReady}
-            onPress={handleSubmit}
-          >
+          <TouchableOpacity style={styles.button} onPress={register}>
             <Text style={styles.h2}>Sign up</Text>
           </TouchableOpacity>
 
+          <AuthNavigationPrompt
+            text="Already have an account? "
+            linkText="Login"
+            href="/login"
+          />
+
+          <AuthSeparator />
+          <SocialAuth />
         </View>
       </View>
     </SafeAreaView>
@@ -133,15 +143,9 @@ const styles = StyleSheet.create({
     marginBlock: 10,
   },
   eyeIcon: {
-    position: 'absolute', // <-- ทำให้ไอคอนลอยได้
-    right: 20, // <-- จัดตำแหน่งไปทางขวา
+    position: 'absolute',
+    right: 20,
     top: 20
-
-  },
-  checkboxContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    gap: 5
   },
   loginCard: {
     width: '80%',
@@ -157,18 +161,10 @@ const styles = StyleSheet.create({
     marginBlock: 10,
     borderRadius: 30,
   },
-  disabledButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 40,
-    paddingBlock: 5,
-    marginBlock: 10,
-    borderRadius: 30,
-    opacity: 50
-  },
   textArea: {
     marginBlock: 20
   }
+});
 
-}
-)
 export default Register;
+
