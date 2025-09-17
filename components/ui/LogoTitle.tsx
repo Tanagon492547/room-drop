@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Pressable, StyleSheet, Text } from "react-native";
 
 type colorProps = {
   color : string | undefined
@@ -9,11 +10,11 @@ type colorProps = {
 
 const LogoTitle =({color,size, fontSize }:colorProps)=>{
   return(
-    <View style={styles.logoArea}>
+    <Pressable style={styles.logoArea} onPress={()=>router.replace('/')}>
       <FontAwesome name='home' size={size} color={color} />
       <Text style={[styles.h1, {fontSize: fontSize , color:color}]}>Room drop</Text>
 
-    </View>
+    </Pressable>
   )
 }
 
