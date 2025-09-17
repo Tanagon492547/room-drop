@@ -8,10 +8,9 @@ import AvatarProfile from "./AvatarProfile";
 
 type props = {
   email: string | undefined,
-  password: string | undefined
 }
 
-const Profile = ({ email, password }: props) => {
+const Profile = ({ email }: props) => {
   const [userFname, setUserFname] = useState('');
   const [userLname, setUserLname] = useState('');
   const [userPhone, setUserPhone] = useState('');
