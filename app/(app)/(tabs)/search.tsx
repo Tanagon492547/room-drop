@@ -1,12 +1,18 @@
+
+import { View } from '@/components/Themed';
+import LogoTitle from '@/components/ui/LogoTitle';
+import FormCard from '@/components/ui/searchs/FormCard';
+import { colors } from '@/constants/Colors';
+import * as React from 'react';
 import { StyleSheet } from 'react-native';
 
-import { Text, View } from '@/components/Themed';
 
-export default function TabTwoScreen() {
+const Search = () => {
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+      <LogoTitle color={colors.primary} size={100} fontSize={30} />
+      <FormCard />
     </View>
   );
 }
@@ -26,4 +32,7 @@ const styles = StyleSheet.create({
     height: 1,
     width: '80%',
   },
+  
 });
+
+export default Search;
