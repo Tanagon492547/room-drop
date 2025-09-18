@@ -58,15 +58,28 @@ const TabLayout =()=> {
           tabBarIcon: ({ color }) => <TabBarIcon name="suitcase" color={color} />,
         }}
       />
+       <Tabs.Screen
+        name="dropping"
+        options={{
+          title: 'Dropping',
+          tabBarIcon: ({ color }) => <TabBarIcon name="key" color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Add',
-          tabBarIcon: ({ color }) => <TabBarIcon name="plus-circle" color={color} />,
+          title: 'profile',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
       <Tabs.Screen
         name="search"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="droproom"
         options={{
           href: null,
         }}
