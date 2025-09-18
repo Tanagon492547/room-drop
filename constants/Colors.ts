@@ -6,7 +6,7 @@ export const colors = {
      primary: '#314071', // ตัวอย่าง: สีน้ำเงินสดใส (Vibrant Blue) - สื่อถึงความน่าเชื่อถือและทันสมัย 
      primaryDark: '#1C5CB7',  // เข้มขึ้นสำหรับสถานะ Hover/Active  Active opacity 70%
      primaryLight:' #1568C0', // สว่างขึ้นสำหรับพื้นหลังหรือองค์ประกอบเสริม  
-
+     primaryPlus: '#1c5db78e',
 // Secondary Colors (สีรอง) - ใช้สำหรับองค์ประกอบเสริม, ปุ่มรอง, Icon ที่ไม่เน้นมาก 
      secondary: '#6607DB', // ตัวอย่าง: สีเทาเข้ม (Muted Gray) - เสริมความเรียบร้อยและไม่แย่งซีน Primary 
      secondaryDark: '# 455A64', 
@@ -17,7 +17,7 @@ export const colors = {
 // Text Colors (สีข้อความ) - ข้อความหลัก, รอง, Placeholder
      text: '#000000',        // ตัวอย่าง: สีเทาเข้มเกือบดำ (Dark Gray) - อ่านง่ายบนพื้นหลังสว่าง 
      textSecondary: '#828282', // ข้อความรอง, Label, Placeholder 
-     textLight: '#8A8A8A',   // ข้อความที่จางลง, ไม่ใช่ข้อความหลัก 
+     textLight: '#2b2b2bea',   // ข้อความที่จางลง, ไม่ใช่ข้อความหลัก 
      textWhite: '#FFFFFF',   // สำหรับข้อความบนพื้นหลังเข้ม  
 
 // Status Colors (สีสถานะ) - ใช้สำหรับการแจ้งเตือนสถานะต่างๆ 
