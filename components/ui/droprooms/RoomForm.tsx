@@ -31,7 +31,7 @@ const RoomForm = () => {
 
   return (
     <View style={styles.form}>
-      <ScrollView style={{ height: 580 }}>
+      <ScrollView>
         <View style={styles.formIn}>
           <Text style={styles.h1}>ผู้ปล่อยห้อง</Text>
 
@@ -196,6 +196,8 @@ const styles = StyleSheet.create({
   form: {
     width: 359,
     padding: 10,
+    height: 580,
+    paddingBottom:20
   },
   formIn: {
     width: '100%',
@@ -203,7 +205,8 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     paddingHorizontal: 20,
     gap: 10,
-    paddingBlock:20
+    paddingBlock:20,
+    
   },
   input: {
     borderColor: '#9d9d9db3',
