@@ -20,7 +20,7 @@ export default function TabOneScreen() {
         </Pressable>
       </View>
       {isEditing ? (
-        <ProfileForm email={email} password='' />
+        <ProfileForm email={email}  />
       ) : (
         <Profile />
       )}
