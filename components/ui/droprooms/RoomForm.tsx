@@ -194,7 +194,7 @@ const RoomForm = () => {
 
 const styles = StyleSheet.create({
   form: {
-    width: '100%',
+    width: 359,
     padding: 10,
   },
   formIn: {

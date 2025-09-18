@@ -14,7 +14,8 @@ const DropRoom =()=>{
 const styles = StyleSheet.create({
   contarin:{
     width:'100%',
-    flex:1
+    flex:1,
+    alignItems:'center'
   }
 })
 
