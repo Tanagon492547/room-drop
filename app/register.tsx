@@ -3,14 +3,26 @@ import AuthSeparator from "@/components/ui/AuthSeparator";
 import SocialAuth from "@/components/ui/SocialAuth";
 import { colors } from "@/constants/Colors";
 import { FontAwesome } from '@expo/vector-icons';
-import { router } from "expo-router";
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { subscribeToAuth } from './auth';
+
 
 const Register = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  
+  // Firebase auth state
+  const [user, setUser] = React.useState<any>(null);
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  
+  React.useEffect(() => {
+    const unsub = subscribeToAuth(setUser);
+    return unsub;
+  }, []);
+
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#314071' }}>
       <View style={styles.loginBg}>
@@ -19,9 +31,9 @@ const Register = () => {
             <Text style={styles.h1}>Create account</Text>
           </View>
           <View>
-            <TextInput style={styles.inputCSS} placeholder="Usesrname" />
+            <TextInput style={styles.inputCSS} placeholder="Username" />
             <View style={{ position: 'relative' }}>
-              <TextInput style={styles.inputCSS} placeholder="password" secureTextEntry={!isPasswordVisible} />
+              <TextInput style={styles.inputCSS} placeholder="Password" secureTextEntry={!isPasswordVisible} />
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setIsPasswordVisible(!isPasswordVisible)} // <-- กดเพื่อสลับ state
@@ -50,8 +62,11 @@ const Register = () => {
 
           <TouchableOpacity style={styles.button} onPress={() => {
             // ส่วนนี้จำลองเข้า ระบบ ชัวร์คราว
-            router.replace('/login'); 
-          }}>
+            //router.replace('/login'); 
+
+            // registration logic here
+
+            }}>
             <Text style={styles.h2}>Sign up</Text>
           </TouchableOpacity>
 
