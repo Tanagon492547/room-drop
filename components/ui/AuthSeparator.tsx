@@ -13,19 +13,19 @@ const AuthSeparator = () =>{
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row', // 1. ทำให้เส้นกับตัวอักษรเรียงกันแนวนอน
-    alignItems: 'center', // 2. จัดให้อยู่ตรงกลางแนวตั้ง
-    paddingVertical: 20, // เพิ่มระยะห่างบนล่าง
+    flexDirection: 'row',
+    alignItems: 'center', 
+    paddingVertical: 20,
   },
   line: {
-    flex: 1, // 3. ทำให้เส้นสองข้างยืดขยายเต็มพื้นที่ที่เหลือ
-    height: 1, // ความหนาของเส้น
-    backgroundColor: '#D1D5DB', // สีของเส้น (สีเทาอ่อน)
+    flex: 1,
+    height: 1,
+    backgroundColor: '#D1D5DB',
   },
   text: {
-    marginHorizontal: 15, // 4. เพิ่มระยะห่างระหว่างเส้นกับตัวอักษร
+    marginHorizontal: 15,
     fontSize: 14,
-    color: '#6B7280', // สีตัวอักษร (สีเทา)
+    color: '#6B7280',
     fontWeight: '600',
   },
 });
