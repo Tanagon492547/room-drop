@@ -10,11 +10,36 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
 const SignIn = () => {
   const { signIn } = useSession();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isChecked, setChecked] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleLogin = async () => {
+     setErrorMsg(null);
+    if (!email.trim() || !password) {
+      setErrorMsg("Please fill email and password.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await signIn(email.trim(), password);   // ✅ ให้ hook จัดการ Firebase และ idToken
+      // Remember me: ถ้าอยากทำจริง ให้เก็บ flag ไว้ใน AsyncStorage เพิ่มเองได้
+      router.replace('/');                    // ✅ (app)/_layout จะกัน route ให้เอง
+    } catch (error: any) {
+      // แสดงข้อความสั้นๆ ที่เป็นมิตร
+      const msg = error?.message ?? "Login failed. Please try again.";
+      setErrorMsg(msg);
+      console.log("Login error:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#314071' }}>
       <View style={styles.loginBg}>
@@ -23,10 +48,16 @@ const SignIn = () => {
             <Text style={styles.h1}>Login</Text>
           </View>
           <View>
-            <TextInput style={styles.inputCSS} placeholder="Usesrname" />
+            <TextInput style={styles.inputCSS} placeholder="Email" value={email} onChangeText={(email)=>{setEmail(email)}} />
             <View style={{ position: 'relative' }}>
 
-              <TextInput style={styles.inputCSS} placeholder="password" secureTextEntry={!isPasswordVisible} />
+              <TextInput 
+              style={styles.inputCSS} 
+              placeholder="password" 
+              secureTextEntry={!isPasswordVisible}
+              value={password}
+              onChangeText={(password)=>{setPassword(password)}}
+              />
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setIsPasswordVisible(!isPasswordVisible)} // <-- กดเพื่อสลับ state
@@ -58,11 +89,7 @@ const SignIn = () => {
               </Text>
             </Link>
           </View>
-          <TouchableOpacity style={styles.button} onPress={() => {
-            // ส่วนนี้จำลองเข้า ระบบ ชัวร์คราว
-            signIn();
-            router.replace('/');
-          }}>
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.h2}>Login</Text>
           </TouchableOpacity>
 

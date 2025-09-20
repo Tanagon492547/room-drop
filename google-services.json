@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "618111332924",
+    "project_id": "second-hand-hotel-reservation",
+    "storage_bucket": "second-hand-hotel-reservation.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:618111332924:android:d0c1fbbfaa29f958fe8939",
+        "android_client_info": {
+          "package_name": "com.tanagon2547.roomdrop"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "618111332924-ei0s1hoh0djkfk9m1jpai4is6979u8ok.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQ9YRLPeUW5YptMQk32S2elBsJhcs1lqE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "618111332924-ei0s1hoh0djkfk9m1jpai4is6979u8ok.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
