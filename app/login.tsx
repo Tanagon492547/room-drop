@@ -2,12 +2,10 @@ import AuthNavigationPrompt from "@/components/ui/AuthNavigationPrompt";
 import AuthSeparator from "@/components/ui/AuthSeparator";
 import SocialAuth from "@/components/ui/SocialAuth";
 import { colors } from "@/constants/Colors";
-import { auth } from '@/constants/firebaseConfig'; // 2. Import ฟังก์ชันล็อกอิน
 import { useSession } from "@/hooks/useAuth";
 import { FontAwesome } from '@expo/vector-icons';
 import Checkbox from "expo-checkbox";
 import { Link, router } from "expo-router";
-import { signInWithEmailAndPassword } from 'firebase/auth'; // 1. Import auth
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,19 +16,29 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isChecked, setChecked] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleLogin = async () => {
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    
-    // ✨ ส่ง email ที่ผู้ใช้กรอก เข้าไปในฟังก์ชัน signIn()
-    signIn(email); 
-
-    router.replace('/');
-  } catch (error) {
-    console.log("ว๊า", error)
-  }
-};
+     setErrorMsg(null);
+    if (!email.trim() || !password) {
+      setErrorMsg("Please fill email and password.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await signIn(email.trim(), password);   // ✅ ให้ hook จัดการ Firebase และ idToken
+      // Remember me: ถ้าอยากทำจริง ให้เก็บ flag ไว้ใน AsyncStorage เพิ่มเองได้
+      router.replace('/');                    // ✅ (app)/_layout จะกัน route ให้เอง
+    } catch (error: any) {
+      // แสดงข้อความสั้นๆ ที่เป็นมิตร
+      const msg = error?.message ?? "Login failed. Please try again.";
+      setErrorMsg(msg);
+      console.log("Login error:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#314071' }}>

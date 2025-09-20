@@ -1,3 +1,4 @@
+import { auth } from '@/firebase/auth';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -6,7 +7,6 @@ import {
   signOut,
   User,
 } from 'firebase/auth';
-import { auth } from './firebase';
 
 // (Optional Firestore user profile)
 import { doc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore';

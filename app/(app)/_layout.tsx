@@ -6,8 +6,10 @@ import { useSession } from '@/hooks/useAuth';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Redirect, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Text } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
+
+import * as React from 'react';
 
 
 const AppLayout = () => {
@@ -16,8 +18,13 @@ const AppLayout = () => {
   const pathname = usePathname();
 
   if (isLoading) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={{flex:1, alignItems:'center', justifyContent:'center'}}>
+        <ActivityIndicator />
+      </View>
+    );
   }
+
 
   if (!session) {
     // On web, static rendering will stop here as the user is not authenticated
