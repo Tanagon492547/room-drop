@@ -1,65 +1,123 @@
+import { useCart } from "@/app/UseCart";
 import { View } from "@/components/Themed";
 import { FontAwesome } from "@expo/vector-icons";
-import { useState } from "react";
-import { StyleSheet } from "react-native";
-import { Button } from "react-native-paper";
+import React, { useState } from "react";
+import { View as RNView, StyleSheet, Text } from "react-native";
+import { Button, Snackbar } from "react-native-paper";
 
-type props = {
-  idItem: string
-}
+type Props = {
+  idItem: string;
+  idUser?: string;
+  nameHotel?: string;
+  nameFull?: string;
+  address?: string;
+  price?: number;
+  url?: string;
+  dateCheck?: string;
+  dateOut?: string;
+  dayCount?: number;
+};
 
-const ButtonGroup =({idItem}:props)=>{
-  const [item, setItem] = useState("");
+const ButtonGroup = ({
+  idItem,
+  idUser,
+  nameHotel,
+  nameFull,
+  address,
+  price,
+  url,
+  dateCheck,
+  dateOut,
+  dayCount,
+}: Props) => {
+  const add = useCart((s) => s.add);
+  const exists = useCart((s) => s.items.some((it) => it.idItem === idItem));
+  const [snack, setSnack] = useState(false);
 
-  const reserve =()=>{
-    if(!idItem){
-      return ;
-    }
+  const reserve = () => {
+    if (!idItem) return;
+    // TODO: flow จองจริงที่นี่
+    console.log("จองห้องหมายเลข", idItem);
+  };
 
-    setItem(idItem)
-    console.log('จองห้องหมายเลข', item)
-  }
+  const addItemToCart = () => {
+    if (!idItem || exists) return;
 
-  const addItemtoCret =()=>{
-     if(!idItem){
-      return ;
-  }
-    
-    setItem(idItem)
-    console.log('เพิ่มห้องใส่ตระกร้า', item)
-  }
+    add({
+      idItem,
+      idUser: idUser ?? "",
+      nameHotel: nameHotel ?? "",
+      nameFull: nameFull ?? "",
+      address: address ?? "",
+      price: Number(price ?? 0),
+      url: url ?? "",
+      dateCheck: dateCheck ?? "",
+      dateOut: dateOut ?? "",
+      dayCount: Number(dayCount ?? 0),
+    });
 
-  return(
-    <View
-     style={styles.buttonGroup}>
-              <Button  
-                contentStyle={{width:156}} 
-                mode="contained" onPress={() => console.log('Pressed')}
-                labelStyle={{ fontSize: 25 }} 
-                onPressOut={reserve}
-              >
-                จอง
-              </Button>
-              <Button  
-                contentStyle={{width:76}} 
-                mode="outlined" onPress={() => console.log('Pressed')}
-                labelStyle={{ fontSize: 10 }}
-                onPressOut={addItemtoCret}
-              >
-                <FontAwesome name="shopping-cart" size={20} />
-              </Button>
-            </View>
-  )
-}
+    setSnack(true);
+  };
+
+  return (
+    <View style={styles.buttonGroup}>
+      <Button
+        contentStyle={{ width: 156 }}
+        mode="contained"
+        labelStyle={{ fontSize: 18, fontWeight: "700" }}
+        onPress={reserve}
+      >
+        จอง
+      </Button>
+
+      <Button
+        contentStyle={{ width: 76 }}
+        mode="outlined"
+        labelStyle={{ fontSize: 10 }}
+        onPress={addItemToCart}
+        disabled={exists}
+      >
+        <FontAwesome name="shopping-cart" size={20} />
+      </Button>
+
+      {/* Snackbar */}
+      <Snackbar
+        visible={snack}
+        onDismiss={() => setSnack(false)}
+        duration={1500}
+        style={styles.snack}
+        wrapperStyle={styles.snackWrapper}
+        elevation={0}
+        theme={{ colors: { surface: "#FFFFFF", onSurface: "#111827" } }}
+      >
+        <RNView style={styles.snackRow}>
+          <FontAwesome name="check-circle" size={18} color="#16A34A" />
+          <Text style={styles.snackText}>เพิ่มลงตะกร้าแล้ว</Text>
+        </RNView>
+      </Snackbar>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  buttonGroup:{ 
-    width: '100%', 
-    display:'flex', 
-    gap:5,flexDirection:'row',
-    justifyContent:'flex-end', 
-    backgroundColor:'transparent', 
-    paddingEnd:20 }
-})
+  buttonGroup: {
+    width: "100%",
+    display: "flex",
+    gap: 5,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    backgroundColor: "transparent",
+    paddingEnd: 20,
+  },
+  snackWrapper: { backgroundColor: "transparent", bottom: 12 },
+  snack: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    shadowColor: "transparent",
+  },
+  snackRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  snackText: { color: "#111827", fontWeight: "700", fontSize: 14 },
+});
 
 export default ButtonGroup;
