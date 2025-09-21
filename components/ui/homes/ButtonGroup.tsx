@@ -1,31 +1,32 @@
 import { View } from "@/components/Themed";
+import { colors } from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
 import { useState } from "react";
 import { StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 
 type props = {
-  idItem: string
+  roomId: string
 }
 
-const ButtonGroup =({idItem}:props)=>{
+const ButtonGroup =({roomId}:props)=>{
   const [item, setItem] = useState("");
 
   const reserve =()=>{
-    if(!idItem){
+    if(!roomId){
       return ;
     }
 
-    setItem(idItem)
+    setItem(roomId)
     console.log('จองห้องหมายเลข', item)
   }
 
   const addItemtoCret =()=>{
-     if(!idItem){
+     if(!roomId){
       return ;
   }
     
-    setItem(idItem)
+    setItem(roomId)
     console.log('เพิ่มห้องใส่ตระกร้า', item)
   }
 
@@ -37,6 +38,8 @@ const ButtonGroup =({idItem}:props)=>{
                 mode="contained" onPress={() => console.log('Pressed')}
                 labelStyle={{ fontSize: 25 }} 
                 onPressOut={reserve}
+
+                buttonColor={colors.secondary}
               >
                 จอง
               </Button>
