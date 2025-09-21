@@ -90,6 +90,12 @@ const TabLayout =()=> {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="bookroom"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

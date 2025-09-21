@@ -1,6 +1,7 @@
 import { View } from "@/components/Themed";
 import { colors } from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
@@ -19,6 +20,12 @@ const ButtonGroup =({roomId}:props)=>{
 
     setItem(roomId)
     console.log('จองห้องหมายเลข', item)
+    router.replace({
+      pathname:'/(app)/(tabs)/bookroom',
+      params: { roomId: roomId },
+    }
+      
+    )
   }
 
   const addItemtoCret =()=>{
