@@ -16,17 +16,17 @@ type props = {
   url: string | undefined, //ลิงค์รูป
   dateCheck: string | undefined,
   dateOut: string | undefined,
-  idItem: string | undefined, // หมายเลขไอดียืนยันห้อง
+  roomId: string | undefined, // หมายเลขไอดียืนยันห้อง
   dayCount : number | undefined
 
 }
 
-const ContainerCard = ({nameHotel,nameFull, idUser, address, price, url, dateCheck, dateOut, idItem, dayCount }:props) => {
+const ContainerCard = ({nameHotel,nameFull, idUser, address, price, url, dateCheck, dateOut, roomId, dayCount }:props) => {
   return (
     <View style={styles.container}>
       <View style={[styles.cardBody, styles.shadow]}>
         
-        <ImgCard url={url} dayCount={dayCount} />
+        <ImgCard url={url} dayCount={dayCount}  roomId={roomId}  nameHotel={nameHotel} />
 
         <View style={styles.textCrad}>
           <View style={styles.detailCard}>
@@ -50,7 +50,7 @@ const ContainerCard = ({nameHotel,nameFull, idUser, address, price, url, dateChe
         
         <LineBox  />
         
-        <ButtonGroup idItem={idItem? idItem:''} />
+        <ButtonGroup roomId={roomId? roomId:''} />
       </View>
 
     </View>

@@ -8,17 +8,18 @@ export const colors = {
      primaryLight:' #1568C0', // สว่างขึ้นสำหรับพื้นหลังหรือองค์ประกอบเสริม  
      primaryPlus: '#1c5db78e',
 // Secondary Colors (สีรอง) - ใช้สำหรับองค์ประกอบเสริม, ปุ่มรอง, Icon ที่ไม่เน้นมาก 
-     secondary: '#6607DB', // ตัวอย่าง: สีเทาเข้ม (Muted Gray) - เสริมความเรียบร้อยและไม่แย่งซีน Primary 
+     secondary: '#191745ff', // ตัวอย่าง: สีเทาเข้ม (Muted Gray) - เสริมความเรียบร้อยและไม่แย่งซีน Primary 
      secondaryDark: '# 455A64', 
      secondaryLight: '#FFFFFF',  // Background Colors (สีพื้นหลัง) - พื้นหลังของหน้าจอ, Cards, Modals 
      background: '#ffffffff', // ตัวอย่าง: สีเทาอ่อนมาก (Light Gray/Off-white) - สบายตา ไม่สว่างจ้าเกินไป 
-     surface: '#xxxx',    // สำหรับ Card, Dialogs หรือองค์ประกอบที่อยู่บน Background  
+     surface: '#C4D2FF',    // สำหรับ Card, Dialogs หรือองค์ประกอบที่อยู่บน Background  
 
 // Text Colors (สีข้อความ) - ข้อความหลัก, รอง, Placeholder
      text: '#000000',        // ตัวอย่าง: สีเทาเข้มเกือบดำ (Dark Gray) - อ่านง่ายบนพื้นหลังสว่าง 
      textSecondary: '#828282', // ข้อความรอง, Label, Placeholder 
      textLight: '#2b2b2bea',   // ข้อความที่จางลง, ไม่ใช่ข้อความหลัก 
      textWhite: '#FFFFFF',   // สำหรับข้อความบนพื้นหลังเข้ม  
+     textBlue:'#314071',
 
 // Status Colors (สีสถานะ) - ใช้สำหรับการแจ้งเตือนสถานะต่างๆ 
      success: '#00B536',     // ตัวอย่าง: สีเขียว (Success Green) - สำหรับการดำเนินการสำเร็จ, ยืนยัน 

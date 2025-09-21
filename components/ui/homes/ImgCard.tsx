@@ -1,40 +1,67 @@
 import { View } from '@/components/Themed';
 import { FontAwesome } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 
 const blurhash =
   '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-type props ={
-  url:string | undefined,
-  dayCount : number | undefined
+type props = {
+  url?: string ,
+  dayCount?: number ,
+  roomId?: string ,
+  nameHotel?: string
+  
 }
 
-const ImgCard =({url, dayCount}:props)=>{
-  return(
+const ImgCard = ({ url, dayCount, roomId, nameHotel }: props) => {
+
+  const goToDetail = () => {
+    console.log(nameHotel)
+
+    if (!roomId) {
+      console.error("ไม่มี roomId, ไม่สามารถนำทางได้");
+      return; // หยุดการทำงานของฟังก์ชันทันที
+    }
+
+    router.replace({
+      pathname: '/(app)/(tabs)/roomdetails/[roomId]',
+      params: { 
+        roomId: roomId, 
+        nameHotel :  nameHotel 
+      
+      }
+    })
+
+  }
+
+  return (
     <View style={styles.card}>
-          <Image
-            style={styles.image}
-            source={url? url : "https://picsum.photos/seed/696/3000/2000"}
-            placeholder={{ blurhash }}
-            contentFit="cover"
-            transition={1000}
-          />
-          <Pressable style={({ hovered, pressed }) =>
-            [styles.eye,
-            styles.shadow,
-            hovered && styles.buttonHovered, // <-- ถ้า hover อยู่ ให้ใช้สไตล์นี้
-            pressed && styles.buttonPressed, // <-- ถ้ากดอยู่ ให้ใช้สไตล์นี้
-            ]}>
-            <FontAwesome name="eye" size={25} color='#686868' />
-          </Pressable>
-          <View style={[styles.indicator, styles.shadow]}>
-            <Text style={styles.h3}>
-              พัก {dayCount} วัน
-            </Text>
-          </View>
-        </View>
+      <Image
+        style={styles.image}
+        source={url ? url : "https://picsum.photos/seed/696/3000/2000"}
+        placeholder={{ blurhash }}
+        contentFit="cover"
+        transition={1000}
+      />
+      <Pressable
+        onPress={goToDetail}
+        style={({ hovered, pressed }) =>
+          [styles.eye,
+          styles.shadow,
+          hovered && styles.buttonHovered, // <-- ถ้า hover อยู่ ให้ใช้สไตล์นี้
+          pressed && styles.buttonPressed, // <-- ถ้ากดอยู่ ให้ใช้สไตล์นี้
+          ]}
+      >
+        <FontAwesome name="eye" size={25} color='#686868' />
+      </Pressable>
+      <View style={[styles.indicator, styles.shadow]}>
+        <Text style={styles.h3}>
+          พัก {dayCount} วัน
+        </Text>
+      </View>
+    </View>
   )
 }
 
