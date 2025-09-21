@@ -5,7 +5,7 @@ import ContainerCard from '@/components/ui/homes/ContainerCard';
 
 const mockData = [
   {
-    "idItem": "booking-001",
+    "room_id": "booking-001",
     "idUser": "user-101",
     "nameHotel": "โรงแรมริมหาด",
     "nameFull": "นายสมชาย ใจดี",
@@ -17,7 +17,7 @@ const mockData = [
     "dayCount": 2
   },
   {
-    "idItem": "booking-002",
+    "room_id": "booking-002",
     "idUser": "user-102",
     "nameHotel": "โรงแรมกลางกรุง",
     "nameFull": "นางสาวสมหญิง มีสุข",
@@ -29,7 +29,7 @@ const mockData = [
     "dayCount": 1
   },
   {
-    "idItem": "booking-003",
+    "room_id": "booking-003",
     "idUser": "user-101",
     "nameHotel": "วิลล่าภูเขา",
     "nameFull": "นายสมชาย ใจดี",
@@ -41,7 +41,7 @@ const mockData = [
     "dayCount": 5
   },
   {
-    "idItem": "booking-004",
+    "room_id": "booking-004",
     "idUser": "user-103",
     "nameHotel": "บูติครีสอร์ท",
     "nameFull": "นายเอกชัย สามารถ",
@@ -53,7 +53,7 @@ const mockData = [
     "dayCount": 2
   },
   {
-    "idItem": "booking-005",
+    "room_id": "booking-005",
     "idUser": "user-104",
     "nameHotel": "โรงแรมริมหาด",
     "nameFull": "นางสาวมานี รักไทย",
@@ -82,12 +82,12 @@ export default function TabOneScreen() {
             url={item.url}
             dateCheck={item.dateCheck}
             dateOut={item.dateOut}
-            idItem={item.idItem}
+            roomId={item.room_id}
             dayCount={item.dayCount}
           />
         )}
 
-        keyExtractor={item => item.idItem}
+        keyExtractor={item => item.room_id}
         contentContainerStyle={{
           paddingRight: 0,
           paddingLeft: 16,

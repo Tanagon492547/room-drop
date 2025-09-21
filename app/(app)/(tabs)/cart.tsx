@@ -11,7 +11,7 @@ import {
 } from "react-native";
 
 type CartItem = {
-  idItem: string;     
+  roomId: string;     
   idUser: string;
   nameHotel: string;
   nameFull: string;
@@ -37,7 +37,7 @@ export default function CartTab() {
     setConfirm({
       visible: true,
       mode: "remove",
-      id: it.idItem,
+      id: it.roomId,
       title: "ลบรายการนี้?",
       message: it.nameHotel ? `คุณต้องการลบ “${it.nameHotel}” ออกจากตะกร้าหรือไม่` : undefined,
     });
@@ -148,7 +148,7 @@ export default function CartTab() {
         <>
           <FlatList
             data={items}
-            keyExtractor={(it) => it.idItem}
+            keyExtractor={(it) => it.roomId}
             renderItem={renderItem}
             contentContainerStyle={{ paddingBottom: 120 }}
             showsVerticalScrollIndicator={false}

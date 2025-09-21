@@ -1,12 +1,16 @@
-import { useCart } from "@/app/UseCart";
-import { View } from "@/components/Themed";
+// ในไฟล์ ButtonGroup.tsx
+
+import { useCart } from "@/app/UseCart"; // สมมติว่า path ถูกต้อง
+import { colors } from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
-import { View as RNView, StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Button, Snackbar } from "react-native-paper";
 
+// ✨ 1. กำหนด Props ให้ชัดเจนและครบถ้วน
 type Props = {
-  idItem: string;
+  roomId: string;
   idUser?: string;
   nameHotel?: string;
   nameFull?: string;
@@ -18,45 +22,42 @@ type Props = {
   dayCount?: number;
 };
 
-const ButtonGroup = ({
-  idItem,
-  idUser,
-  nameHotel,
-  nameFull,
-  address,
-  price,
-  url,
-  dateCheck,
-  dateOut,
-  dayCount,
-}: Props) => {
+const ButtonGroup = (props: Props) => {
+  const { roomId, nameHotel } = props; // ดึง roomId มาใช้เพื่อความกระชับ
   const add = useCart((s) => s.add);
-  const exists = useCart((s) => s.items.some((it) => it.idItem === idItem));
+  const exists = useCart((s) => s.items.some((it) => it.roomId === roomId));
   const [snack, setSnack] = useState(false);
 
+  // ✨ 2. แก้ไขฟังก์ชัน reserve ให้ถูกต้อง
   const reserve = () => {
-    if (!idItem) return;
-    // TODO: flow จองจริงที่นี่
-    console.log("จองห้องหมายเลข", idItem);
+    if (!roomId) return;
+    console.log("จองห้องหมายเลข", roomId);
+    router.replace({
+      pathname: '/(app)/(tabs)/bookroom',
+      params: { 
+        roomId: roomId,
+       }, // ใช้ roomId ที่รับมาจาก props
+    });
   };
 
+  // ✨ 3. แก้ไขฟังก์ชัน addItemToCart ให้ถูกต้อง
   const addItemToCart = () => {
-    if (!idItem || exists) return;
+    if (!roomId || exists) return;
 
     add({
-      idItem,
-      idUser: idUser ?? "",
-      nameHotel: nameHotel ?? "",
-      nameFull: nameFull ?? "",
-      address: address ?? "",
-      price: Number(price ?? 0),
-      url: url ?? "",
-      dateCheck: dateCheck ?? "",
-      dateOut: dateOut ?? "",
-      dayCount: Number(dayCount ?? 0),
+      roomId: props.roomId,
+      idUser: props.idUser ?? "",
+      nameHotel: props.nameHotel ?? "",
+      nameFull: props.nameFull ?? "",
+      address: props.address ?? "",
+      price: Number(props.price ?? 0),
+      url: props.url ?? "",
+      dateCheck: props.dateCheck ?? "",
+      dateOut: props.dateOut ?? "",
+      dayCount: Number(props.dayCount ?? 0),
     });
 
-    setSnack(true);
+    setSnack(true); // แสดง Snackbar เมื่อเพิ่มสำเร็จ
   };
 
   return (
@@ -64,8 +65,9 @@ const ButtonGroup = ({
       <Button
         contentStyle={{ width: 156 }}
         mode="contained"
-        labelStyle={{ fontSize: 18, fontWeight: "700" }}
-        onPress={reserve}
+        onPress={reserve} // ✨ 4. ใช้ onPress อย่างเดียว
+        labelStyle={{ fontSize: 25, fontWeight: "700" }}
+        buttonColor={colors.secondary}
       >
         จอง
       </Button>
@@ -73,27 +75,24 @@ const ButtonGroup = ({
       <Button
         contentStyle={{ width: 76 }}
         mode="outlined"
+        onPress={addItemToCart} // ✨ 4. ใช้ onPress อย่างเดียว
         labelStyle={{ fontSize: 10 }}
-        onPress={addItemToCart}
-        disabled={exists}
+        disabled={exists} // ปิดปุ่มถ้ามีในตะกร้าแล้ว
       >
         <FontAwesome name="shopping-cart" size={20} />
       </Button>
 
-      {/* Snackbar */}
+      {/* Snackbar สำหรับแจ้งเตือน */}
       <Snackbar
         visible={snack}
         onDismiss={() => setSnack(false)}
         duration={1500}
         style={styles.snack}
-        wrapperStyle={styles.snackWrapper}
-        elevation={0}
-        theme={{ colors: { surface: "#FFFFFF", onSurface: "#111827" } }}
       >
-        <RNView style={styles.snackRow}>
+        <View style={styles.snackRow}>
           <FontAwesome name="check-circle" size={18} color="#16A34A" />
           <Text style={styles.snackText}>เพิ่มลงตะกร้าแล้ว</Text>
-        </RNView>
+        </View>
       </Snackbar>
     </View>
   );
@@ -109,15 +108,20 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     paddingEnd: 20,
   },
-  snackWrapper: { backgroundColor: "transparent", bottom: 12 },
   snack: {
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
-    paddingHorizontal: 14,
-    shadowColor: "transparent",
   },
-  snackRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  snackText: { color: "#111827", fontWeight: "700", fontSize: 14 },
+  snackRow: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 8 
+  },
+  snackText: { 
+    color: "#111827", 
+    fontWeight: "700", 
+    fontSize: 14 
+  },
 });
 
 export default ButtonGroup;

@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
-/** โครงข้อมูลในตะกร้า (ใช้ idItem เป็นคีย์หลัก) */
+/** โครงข้อมูลในตะกร้า (ใช้ roomId เป็นคีย์หลัก) */
 export type CartItem = {
-  idItem: string;      // คีย์หลักเดิม
+  roomId: string;      // คีย์หลักเดิม
   idUser: string;
   nameHotel: string;
   nameFull: string;
@@ -17,26 +17,26 @@ export type CartItem = {
 type CartState = {
   items: CartItem[];
   add: (item: CartItem) => void;
-  remove: (idItem: string) => void;
+  remove: (roomId: string) => void;
   clear: () => void;
   total: () => number;
-  exists: (idItem: string) => boolean;
+  exists: (roomId: string) => boolean;
 };
 
 export const useCart = create<CartState>((set, get) => ({
   items: [],
 
-  /** เพิ่มลงตะกร้า (กันซ้ำด้วย idItem) */
+  /** เพิ่มลงตะกร้า (กันซ้ำด้วย roomId) */
   add: (item) =>
     set((state) => {
-      if (state.items.some((it) => it.idItem === item.idItem)) return state;
+      if (state.items.some((it) => it.roomId === item.roomId)) return state;
       return { items: [...state.items, item] };
     }),
 
-  /** ลบรายการตาม idItem */
-  remove: (idItem) =>
+  /** ลบรายการตาม roomId */
+  remove: (roomId) =>
     set((state) => ({
-      items: state.items.filter((it) => it.idItem !== idItem),
+      items: state.items.filter((it) => it.roomId !== roomId),
     })),
 
   /** ล้างทั้งหมด */
@@ -47,5 +47,5 @@ export const useCart = create<CartState>((set, get) => ({
     get().items.reduce((sum, it) => sum + Number(it.price ?? 0), 0),
 
   /** เช็คว่ามี item นี้ในตะกร้าหรือยัง */
-  exists: (idItem) => get().items.some((it) => it.idItem === idItem),
+  exists: (roomId) => get().items.some((it) => it.roomId === roomId),
 }));
