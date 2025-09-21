@@ -1,15 +1,14 @@
 // constants/firebaseConfig.ts
-import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
+import { FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
 import {
-  Auth,
-  browserLocalPersistence,
-  getAuth,
-  inMemoryPersistence,
-  setPersistence,
-} from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { Platform } from 'react-native';
+  getReactNativePersistence,
+  initializeAuth,
+} from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
+// 🔑 Config values from Expo .env
 export const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN!,
@@ -20,17 +19,17 @@ export const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID, // optional
 };
 
-export const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// ✅ Initialize Firebase app
+export const app: FirebaseApp =
+  getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// ✅ ไม่ใช้ firebase/auth/react-native เลย
-export const auth: Auth = getAuth(app);
+// ✅ Use React Native AsyncStorage persistence for Auth
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
+
+// ✅ Firestore
 export const db = getFirestore(app);
 
-// 🔧 ตั้งค่า persistence ให้เหมาะกับแพลตฟอร์ม (ไม่มี react-native persistence)
-if (Platform.OS === 'web') {
-  // บนเว็บ: เก็บ session ไว้ใน localStorage
-  setPersistence(auth, browserLocalPersistence).catch(() => {});
-} else {
-  // บน Native: ใช้ in-memory (ผู้ใช้ต้องล็อกอินใหม่เมื่อเปิดแอปอีกครั้ง)
-  setPersistence(auth, inMemoryPersistence).catch(() => {});
-}
+export const storage = getStorage(app);
+

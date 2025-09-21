@@ -84,7 +84,7 @@ const Register = () => {
       Alert.alert("สำเร็จ", "สมัครสมาชิกเรียบร้อย");
       // ไปหน้าสร้างโปรไฟล์ (อยู่ในกลุ่ม (app) ของคุณ)
       router.replace({
-        pathname: "./(app)/profilecreate",
+        pathname: "./profilecreate",
         params: { email: email.trim() },
       });
     } catch (error: any) {

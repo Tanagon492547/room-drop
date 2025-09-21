@@ -84,6 +84,18 @@ const TabLayout =()=> {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="roomdetails/[roomId]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="bookroom"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
