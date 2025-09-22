@@ -12,8 +12,8 @@ type props = {
 }
 
 const BookingFormCard = ({ fname, lname, email, phone_number }: props) => {
-   const params = useLocalSearchParams();
-   const roomId = params.roomId === null ? undefined : params.roomId;
+  const params = useLocalSearchParams();
+  const finalRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
   const [userFName, setUserFName] = useState(fname || '')
   const [userLName, setUserLName] = useState(lname || '')
   const [userEmail, setUserEmail] = useState(email || '')
@@ -21,13 +21,18 @@ const BookingFormCard = ({ fname, lname, email, phone_number }: props) => {
   const [country, setCountry] = useState('ไทย') // ใส่มาเท่ๆ
 
   // มาส่งข้อมูลการจองที่นนี่เเล้ววิ่งไปหาหน้าจ่ายเงิน
-  const formSending =()=>{
-     console.log('จองห้อง', roomId)
+  const formSending = () => {
+    console.log('จองห้อง', finalRoomId)
 
-     router.replace({
-      pathname:'/(app)/(tabs)/paymentscreen/[roomId]',
-      params:{roomId : roomId}
-     })
+    if (!finalRoomId) {
+      console.error("ไม่มี roomId, ไม่สามารถนำทางได้");
+      return; // หยุดการทำงานของฟังก์ชันทันที
+    }
+
+    router.replace({
+      pathname: '/(app)/(tabs)/paymentscreen/[roomId]',
+      params: { roomId: finalRoomId }
+    })
   }
   return (
     <View style={styles.card}>
@@ -72,12 +77,12 @@ const BookingFormCard = ({ fname, lname, email, phone_number }: props) => {
         />
       </View>
 
-      <Button  
-        mode="contained" 
-         buttonColor= {colors.secondary}
-        onPress={formSending} 
+      <Button
+        mode="contained"
+        buttonColor={colors.secondary}
+        onPress={formSending}
         style={styles.button}
-        >
+      >
         ไปขั้นตอนสุดท้ายชำระเงิน
       </Button>
     </View>
@@ -106,8 +111,8 @@ const styles = StyleSheet.create({
   b: {
     fontWeight: 'bold',
   },
-  button:{
-    margin:20
+  button: {
+    margin: 20
   },
   shadow: {
     ...Platform
