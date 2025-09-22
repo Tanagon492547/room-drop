@@ -8,7 +8,7 @@ export const colors = {
      primaryLight:' #1568C0', // สว่างขึ้นสำหรับพื้นหลังหรือองค์ประกอบเสริม  
      primaryPlus: '#1c5db78e',
 // Secondary Colors (สีรอง) - ใช้สำหรับองค์ประกอบเสริม, ปุ่มรอง, Icon ที่ไม่เน้นมาก 
-     secondary: '#191745ff', // ตัวอย่าง: สีเทาเข้ม (Muted Gray) - เสริมความเรียบร้อยและไม่แย่งซีน Primary 
+     secondary: 'rgba(20, 121, 180, 0.8)', // ตัวอย่าง: สีเทาเข้ม (Muted Gray) - เสริมความเรียบร้อยและไม่แย่งซีน Primary 
      secondaryDark: '# 455A64', 
      secondaryLight: '#FFFFFF',  // Background Colors (สีพื้นหลัง) - พื้นหลังของหน้าจอ, Cards, Modals 
      background: '#ffffffff', // ตัวอย่าง: สีเทาอ่อนมาก (Light Gray/Off-white) - สบายตา ไม่สว่างจ้าเกินไป 
@@ -25,12 +25,13 @@ export const colors = {
      success: '#00B536',     // ตัวอย่าง: สีเขียว (Success Green) - สำหรับการดำเนินการสำเร็จ, ยืนยัน 
      info: '#1C5CB7',        // ตัวอย่าง: สีฟ้า (Info Blue) - สำหรับข้อมูลทั่วไป, การแจ้งเตือนinfo for something important ‘D81600’ : ราคา รหัสผ่าน
      warning: '#FF0000',  
+     yellow:'#cebf18ff',
    
 // ตัวอย่าง: สีส้มเหลือง (Warning Yellow) - สำหรับคำเตือน, ต้องระมัดระวัง 
      error: '#xxxx',       // ตัวอย่าง: สีแดง (Error Red) - สำหรับข้อผิดพลาด, การแจ้งเตือนที่สำคัญ  
 
 // Border & Divider Colors (สีเส้นขอบและเส้นแบ่ง) 
-    borderColor: '#xxxx', // สีสำหรับเส้นขอบ Input, Divider 
+    borderColor: '#191745ff', // สีสำหรับเส้นขอบ Input, Divider 
      divider: '#xxxx',     // สีสำหรับเส้นแบ่งองค์ประกอบ  
 // Accent Colors (สีเน้น) - ถ้าต้องการสีพิเศษสำหรับ Icon, Highlight, หรือ Call to Action 
 // accent: '#xxxx',
