@@ -19,6 +19,11 @@ const PaySelectCard = ({ name, phoneNumber, roomId, nameHotel }: props) => {
 
   const goToBillPaymentScreen = () => {
     console.log('ไปดูบิลของ', roomId)
+
+    if(!roomId){
+        return;
+      }
+
     router.replace({
       pathname: '/(app)/(tabs)/bills/[roomId]',
       params: { roomId: roomId }
