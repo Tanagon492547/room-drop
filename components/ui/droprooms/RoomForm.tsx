@@ -22,6 +22,7 @@ const RoomForm = () => {
   const [room_photoURL, setRoomPhoto] = useState("");
   const [room_bill, setRoomBill] = useState("");
   const [promptPay, setPromptPay] = useState("");
+  const room_status = 1
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -165,6 +166,7 @@ const RoomForm = () => {
         room_date_checkOut,
         room_photoURL: room_photoURL,
         room_bill: room_bill,
+        room_status,
         hotel_id: hotelRef.id,
         hotel_name,
         user_id: user.uid,

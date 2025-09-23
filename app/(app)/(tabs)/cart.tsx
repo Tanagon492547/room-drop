@@ -1,5 +1,6 @@
 import { useCart } from "@/app/UseCart";
 import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
@@ -11,7 +12,7 @@ import {
 } from "react-native";
 
 type CartItem = {
-  roomId: string;     
+  roomId: string;
   idUser: string;
   nameHotel: string;
   nameFull: string;
@@ -110,6 +111,19 @@ export default function CartTab() {
               style={[s.btn, s.btnGhost]}
               onPress={() => {
                 // no-op: แสดงรายละเอียด (ค่อยผูกภายหลัง)
+                if (!item?.roomId) return;
+                // ⚠️ Use the actual route you have. If your file is (tabs)/roomdetails/[roomId].tsx:
+                router.push({
+                  pathname: "/(app)/(tabs)/roomdetails/[roomId]",
+                  params: { roomId: item.roomId, nameHotel: item.nameHotel || "" },
+                });
+
+                // If your file is (tabs)/roomdetail/[roomId].tsx (without the "s"),
+                // use this instead:
+                // router.push({
+                //   pathname: "/(app)/(tabs)/roomdetail/[roomId]",
+                //   params: { roomId: item.roomId, nameHotel: item.nameHotel || "" },
+                // });
               }}
             >
               <Text style={s.btnGhostText}>ดูรายละเอียด</Text>
@@ -162,11 +176,11 @@ export default function CartTab() {
             </View>
 
             {/* ล้างทั้งหมด */}
-              <TouchableOpacity
-               style={[s.btn, s.btnDanger, { marginRight: 8 }]}
-                  onPress={openConfirmClear}>
-                  <Text style={s.btnDangerText}>ลบทั้งหมด</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.btn, s.btnDanger, { marginRight: 8 }]}
+              onPress={openConfirmClear}>
+              <Text style={s.btnDangerText}>ลบทั้งหมด</Text>
+            </TouchableOpacity>
 
 
             <TouchableOpacity
@@ -209,7 +223,6 @@ export default function CartTab() {
 const s = StyleSheet.create({
   container: { flex: 1, padding: 12, width: "100%" },
   header: { fontSize: 22, fontWeight: "800", marginBottom: 8 },
-
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   card: {
@@ -346,3 +359,4 @@ const s = StyleSheet.create({
   },
   dialogBtnRedText: { color: "#EF4444", fontWeight: "800" },
 });
+
