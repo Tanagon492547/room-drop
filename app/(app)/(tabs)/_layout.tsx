@@ -102,6 +102,12 @@ const TabLayout =()=> {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="bills/[roomId]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

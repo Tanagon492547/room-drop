@@ -17,7 +17,7 @@ type RoomListItem = {
   room_photoURL?: string;
   hotel_photoURL?: string;
   seller_name?: string;
-  url?: string; // resolved https for ContainerCard
+  url?: string; 
   dayCount?: number;
 };
 
@@ -71,7 +71,20 @@ const ContainerCard = ({
 
         <LineBox />
 
-        <ButtonGroup roomId={room_id ?? ""} />
+        {/*In ContainerCard.tsx*/}
+        <ButtonGroup
+          roomId={room_id ?? ""}
+          idUser={user_id}
+          nameHotel={hotel_name}
+          nameFull={seller_name}
+          address={hotel_location}
+          price={room_price}
+          url={url} // the resolved https URL you already pass to ImgCard
+          dateCheck={room_date_checkIn}
+          dateOut={room_date_checkOut}
+          dayCount={dayCount}
+        />
+
       </View>
     </View>
   );

@@ -119,8 +119,8 @@ const RoomDetail = () => {
         const displayRoom = await resolveUrlForDisplay(room?.room_photoURL);
         setHotelPhotoUrl(displayHotel);
         setRoomPhotoUrl(displayRoom);
-        console.log("[RoomDetail] display hotel photo:", displayHotel);
-        console.log("[RoomDetail] display room photo:", displayRoom);
+        {/*console.log("[RoomDetail] display hotel photo:", displayHotel);
+        console.log("[RoomDetail] display room photo:", displayRoom);*/}
 
         // 4) If file://, upload to Storage now and persist HTTPS back to Firestore (one-time repair)
         //    After upload, set state again so the new HTTPS appears immediately.
@@ -129,7 +129,7 @@ const RoomDetail = () => {
           if (https) {
             await updateDoc(hotelRef, { hotel_photoURL: https });
             setHotelPhotoUrl(https);
-            console.log("[RoomDetail] repaired hotel photo to:", https);
+            {/*console.log("[RoomDetail] repaired hotel photo to:", https);*/}
           }
         }
 
@@ -138,7 +138,7 @@ const RoomDetail = () => {
           if (https) {
             await updateDoc(roomRef, { room_photoURL: https });
             setRoomPhotoUrl(https);
-            console.log("[RoomDetail] repaired room photo to:", https);
+            {/*console.log("[RoomDetail] repaired room photo to:", https);*/}
           }
         }
 

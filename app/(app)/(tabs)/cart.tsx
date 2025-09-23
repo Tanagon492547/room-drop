@@ -1,7 +1,8 @@
-import { useCart } from "@/app/UseCart";
 import { FontAwesome } from "@expo/vector-icons";
-import React, { useMemo, useState } from "react";
+import { router } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
@@ -10,53 +11,148 @@ import {
   View,
 } from "react-native";
 
+// ✅ Firebase
+import { auth, db } from "@/constants/firebaseConfig";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
+import { getDownloadURL, getStorage, ref } from "firebase/storage";
+
+type CartRow = {
+  cart_id: string;
+  room_id: string;
+};
+
 type CartItem = {
-  roomId: string;     
-  idUser: string;
+  cartId: string;      // Firestore carts doc id
+  roomId: string;      // rooms doc id
+  idUser: string;      // owner of the room (seller) if you want later
   nameHotel: string;
-  nameFull: string;
+  nameFull: string;    // seller_name if you stored it (optional)
   address: string;
-  price: number;       // ราคา (รวม) ต่อรายการในตะกร้า
+  price: number;
   url: string;
   dateCheck: string;
   dateOut: string;
-  dayCount: number;    // แค่โชว์ตัวเลข
+  dayCount: number;
 };
 
-type ConfirmState =
-  | { visible: false }
-  | { visible: true; mode: "remove"; id: string; title: string; message?: string }
-  | { visible: true; mode: "clear"; title: string; message?: string };
+const FALLBACK =
+  "https://as1.ftcdn.net/jpg/03/46/83/96/1000_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg";
+
+const isHttp = (u?: string) => !!u && (u.startsWith("http://") || u.startsWith("https://"));
+const isGs = (u?: string) => !!u && u.startsWith("gs://");
+const isFile = (u?: string) => !!u && u.startsWith("file://");
+
+// Resolve a room image into something the <Image> can display
+const resolveRoomImage = async (raw?: string) => {
+  try {
+    if (!raw) return FALLBACK;
+    if (isHttp(raw) || isFile(raw)) return raw; // file:// works on same device that picked it
+    if (isGs(raw)) {
+      const storage = getStorage();
+      return await getDownloadURL(ref(storage, raw));
+    }
+    return FALLBACK;
+  } catch {
+    return FALLBACK;
+  }
+};
 
 export default function CartTab() {
-  const { items, remove, clear, total } = useCart();
-  const grand = useMemo(() => total(), [items]);
-  const [confirm, setConfirm] = useState<ConfirmState>({ visible: false });
+  const user = auth.currentUser;
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<CartItem[]>([]);
 
-  const openConfirmRemove = (it: CartItem) =>
-    setConfirm({
-      visible: true,
-      mode: "remove",
-      id: it.roomId,
-      title: "ลบรายการนี้?",
-      message: it.nameHotel ? `คุณต้องการลบ “${it.nameHotel}” ออกจากตะกร้าหรือไม่` : undefined,
-    });
+  // Subscribe to /carts for this user, then hydrate with rooms data
+  useEffect(() => {
+    if (!user) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
 
-  const openConfirmClear = () =>
-    setConfirm({
-      visible: true,
-      mode: "clear",
-      title: "ลบทั้งหมด?",
-      message: "คุณต้องการลบทุกห้องออกจากตะกร้าใช่หรือไม่",
-    });
+    const q = query(collection(db, "carts"), where("user_id", "==", user.uid));
+    const unsub = onSnapshot(
+      q,
+      async (snap) => {
+        try {
+          const rows: CartRow[] = snap.docs.map((d) => ({
+            cart_id: d.id,
+            room_id: (d.data() as any)?.room_id,
+          }));
 
-  const closeConfirm = () => setConfirm({ visible: false });
+          // Fetch each room
+          const withRooms = await Promise.all(
+            rows.map(async (row) => {
+              if (!row.room_id) return null;
+              const rs = await getDoc(doc(db, "rooms", row.room_id));
+              if (!rs.exists()) return null;
+              const r = rs.data() as any;
 
-  const doConfirm = () => {
-    if (!confirm.visible) return;
-    if (confirm.mode === "remove") remove(confirm.id);
-    else clear();
-    closeConfirm();
+              const img = await resolveRoomImage(r.room_photoURL);
+
+              const item: CartItem = {
+                cartId: row.cart_id,
+                roomId: row.room_id,
+                idUser: String(r.user_id ?? ""),
+                nameHotel: String(r.hotel_name ?? "ไม่มีข้อมูล"),
+                nameFull: String(r.seller_name ?? ""), // if you store it
+                address: String(r.hotel_location ?? "ไม่มีข้อมูล"),
+                price: Number(r.room_price ?? 0),
+                url: img,
+                dateCheck: String(r.room_date_checkIn ?? "-"),
+                dateOut: String(r.room_date_checkOut ?? "-"),
+                dayCount: Number(r.dayCount ?? 0),
+              };
+              return item;
+            })
+          );
+
+          setItems(withRooms.filter(Boolean) as CartItem[]);
+        } catch (e) {
+          console.log("[Cart] hydrate error:", e);
+        } finally {
+          setLoading(false);
+        }
+      },
+      (err) => {
+        console.log("[Cart] listen error:", err);
+        setLoading(false);
+      }
+    );
+
+    return unsub;
+  }, [user?.uid]);
+
+  const grand = useMemo(
+    () => items.reduce((sum, it) => sum + Number(it.price ?? 0), 0),
+    [items]
+  );
+
+  const remove = async (roomId: string) => {
+    // find the cart doc for this room
+    const row = items.find((it) => it.roomId === roomId);
+    if (!row) return;
+    try {
+      await deleteDoc(doc(db, "carts", row.cartId));
+    } catch (e) {
+      console.log("[Cart] remove error:", e);
+    }
+  };
+
+  const clear = async () => {
+    try {
+      await Promise.all(items.map((it) => deleteDoc(doc(db, "carts", it.cartId))));
+    } catch (e) {
+      console.log("[Cart] clear error:", e);
+    }
   };
 
   const renderItem = ({ item }: { item: CartItem }) => {
@@ -109,24 +205,32 @@ export default function CartTab() {
             <TouchableOpacity
               style={[s.btn, s.btnGhost]}
               onPress={() => {
-                // no-op: แสดงรายละเอียด (ค่อยผูกภายหลัง)
+                if (!item?.roomId) return;
+                // ⚠️ Use the actual route you have. If your file is (tabs)/roomdetails/[roomId].tsx:
+                router.push({
+                  pathname: "/(app)/(tabs)/roomdetails/[roomId]",
+                  params: { roomId: item.roomId, nameHotel: item.nameHotel || "" },
+                });
+
+                // If your file is (tabs)/roomdetail/[roomId].tsx (without the "s"),
+                // use this instead:
+                // router.push({
+                //   pathname: "/(app)/(tabs)/roomdetail/[roomId]",
+                //   params: { roomId: item.roomId, nameHotel: item.nameHotel || "" },
+                // });
               }}
             >
               <Text style={s.btnGhostText}>ดูรายละเอียด</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[s.btn, s.btnPrimary]}
-              onPress={() => {
-                // no-op: จอง/ชำระเงิน (ค่อยผูกภายหลัง)
-              }}
-            >
+
+            <TouchableOpacity style={[s.btn, s.btnPrimary]} onPress={() => { }}>
               <Text style={s.btnPrimaryText}>จอง</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[s.btn, s.btnDanger]}
-              onPress={() => openConfirmRemove(item)}
+              onPress={() => remove(item.roomId)}
             >
               <Text style={s.btnDangerText}>ลบ</Text>
             </TouchableOpacity>
@@ -136,9 +240,25 @@ export default function CartTab() {
     );
   };
 
+  if (!user) {
+    return (
+      <View style={[s.container, s.empty]}>
+        <FontAwesome name="shopping-bag" size={22} />
+        <Text style={{ marginTop: 6 }}>กรุณาเข้าสู่ระบบเพื่อดูตะกร้า</Text>
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={[s.container, s.empty]}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
     <View style={s.container}>
-
       {items.length === 0 ? (
         <View style={s.empty}>
           <FontAwesome name="shopping-bag" size={22} />
@@ -148,59 +268,30 @@ export default function CartTab() {
         <>
           <FlatList
             data={items}
-            keyExtractor={(it) => it.roomId}
+            keyExtractor={(it) => it.cartId}
             renderItem={renderItem}
             contentContainerStyle={{ paddingBottom: 120 }}
             showsVerticalScrollIndicator={false}
           />
 
-          {/* แถบสรุปรวมด้านล่าง */}
           <View style={s.footer}>
             <View style={{ flex: 1 }}>
               <Text style={s.totalLabel}>ยอดรวมทั้งหมด</Text>
               <Text style={s.totalValue}>฿{grand.toLocaleString()}</Text>
             </View>
 
-            {/* ล้างทั้งหมด */}
-              <TouchableOpacity
-               style={[s.btn, s.btnDanger, { marginRight: 8 }]}
-                  onPress={openConfirmClear}>
-                  <Text style={s.btnDangerText}>ลบทั้งหมด</Text>
-              </TouchableOpacity>
-
-
             <TouchableOpacity
-              style={[s.btn, s.btnPrimary]}
-              onPress={() => {
-                // no-op: ชำระเงิน
-              }}
+              style={[s.btn, s.btnDanger, { marginRight: 8 }]}
+              onPress={clear}
             >
+              <Text style={s.btnDangerText}>ลบทั้งหมด</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[s.btn, s.btnPrimary]} onPress={() => { }}>
               <Text style={s.btnPrimaryText}>ชำระเงิน</Text>
             </TouchableOpacity>
           </View>
         </>
-      )}
-
-      {/* Overlay */}
-      {confirm.visible && (
-        <View style={s.dialogBackdrop}>
-          <View style={s.dialogCard}>
-            <Text style={s.dialogTitle}>{confirm.title}</Text>
-            {!!confirm.message && <Text style={s.dialogMsg}>{confirm.message}</Text>}
-
-            <View style={s.dialogActions}>
-              <TouchableOpacity style={[s.dialogBtn, s.dialogBtnOutlineBlue]} onPress={closeConfirm}>
-                <Text style={s.dialogBtnBlueText}>ยกเลิก</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[s.dialogBtn, s.dialogBtnOutlineRed]} onPress={doConfirm}>
-                <Text style={s.dialogBtnRedText}>
-                  {confirm.mode === "remove" ? "ลบ" : "ลบทั้งหมด"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
       )}
     </View>
   );
@@ -209,7 +300,6 @@ export default function CartTab() {
 const s = StyleSheet.create({
   container: { flex: 1, padding: 12, width: "100%" },
   header: { fontSize: 22, fontWeight: "800", marginBottom: 8 },
-
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   card: {
@@ -260,8 +350,6 @@ const s = StyleSheet.create({
     marginTop: 16,
     gap: 10,
   },
-
-  // ปุ่ม base
   btn: {
     flex: 1,
     paddingVertical: 12,
@@ -269,13 +357,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  // ดูรายละเอียด (โทนฟ้าอ่อน)
   btnGhost: { backgroundColor: "#E5EDFF" },
   btnGhostText: { fontWeight: "800", color: "#1E3A8A" },
-  // จอง (ทึบฟ้า)
   btnPrimary: { backgroundColor: "#1D4ED8" },
   btnPrimaryText: { fontWeight: "800", color: "#fff" },
-  // ลบ (ทึบแดง)
   btnDanger: { backgroundColor: "#EF4444" },
   btnDangerText: { fontWeight: "800", color: "#fff" },
 
@@ -298,51 +383,5 @@ const s = StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
   },
-
-  /* ====== Custom Confirm Overlay ====== */
-  dialogBackdrop: {
-    position: "absolute",
-    inset: 0 as any,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  dialogCard: {
-    width: "100%",
-    maxWidth: 420,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-  },
-  dialogTitle: { fontSize: 18, fontWeight: "800" },
-  dialogMsg: { marginTop: 6, fontSize: 14 },
-
-  dialogActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 10,
-    marginTop: 16,
-  },
-  dialogBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  // ยกเลิก 
-  dialogBtnOutlineBlue: {
-    borderWidth: 2,
-    borderColor: "#1D4ED8",
-    backgroundColor: "transparent",
-  },
-  dialogBtnBlueText: { color: "#1D4ED8", fontWeight: "800" },
-  // ลบ/ล้างทั้งหมด 
-  dialogBtnOutlineRed: {
-    borderWidth: 2,
-    borderColor: "#EF4444",
-    backgroundColor: "transparent",
-  },
-  dialogBtnRedText: { color: "#EF4444", fontWeight: "800" },
 });
+
