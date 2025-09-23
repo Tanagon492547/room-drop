@@ -8,77 +8,72 @@ import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 const blurhash =
   '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
-type props = {
-  url?: string ,
-  dayCount?: number ,
-  roomId?: string ,
-  nameHotel?: string
-  
-}
+type Props = {
+  url?: string;
+  dayCount?: number;
+  roomId?: string;
+  nameHotel?: string;
+};
 
-const ImgCard = ({ url, dayCount, roomId, nameHotel }: props) => {
+const FALLBACK = 'https://picsum.photos/seed/696/3000/2000';
 
+const ImgCard = ({ url, dayCount, roomId, nameHotel }: Props) => {
   const goToDetail = () => {
-    console.log(nameHotel)
-
     if (!roomId) {
-      console.error("ไม่มี roomId, ไม่สามารถนำทางได้");
-      return; // หยุดการทำงานของฟังก์ชันทันที
+      console.error('Missing roomId, cannot navigate');
+      return;
     }
 
-    router.replace({
-      pathname: '/(app)/(tabs)/roomdetails/[roomId]',
-      params: { 
-        roomId: roomId, 
-        nameHotel :  nameHotel 
-      
-      }
-    })
-
-  }
+    // ✅ Route groups like (tabs) are ignored at runtime – use the route path only
+    router.push({
+      pathname: '/roomdetails/[roomId]',
+      params: {
+        roomId,
+        nameHotel: nameHotel ?? '',
+      },
+    });
+  };
 
   return (
     <View style={styles.card}>
       <Image
         style={styles.image}
-        source={url ? url : "https://picsum.photos/seed/696/3000/2000"}
+        // expo-image accepts a string URL directly; keep your working logic
+        source={url || FALLBACK}
         placeholder={{ blurhash }}
         contentFit="cover"
         transition={1000}
       />
+
       <Pressable
         onPress={goToDetail}
-        style={({ hovered, pressed }) =>
-          [styles.eye,
+        style={({ hovered, pressed }) => [
+          styles.eye,
           styles.shadow,
-          hovered && styles.buttonHovered, // <-- ถ้า hover อยู่ ให้ใช้สไตล์นี้
-          pressed && styles.buttonPressed, // <-- ถ้ากดอยู่ ให้ใช้สไตล์นี้
-          ]}
+          hovered && styles.buttonHovered,
+          pressed && styles.buttonPressed,
+        ]}
       >
-        <FontAwesome name="eye" size={25} color='#686868' />
+        <FontAwesome name="eye" size={25} color="#686868" />
       </Pressable>
+
       <View style={[styles.indicator, styles.shadow]}>
-        <Text style={styles.h3}>
-          พัก {dayCount} วัน
-        </Text>
+        <Text style={styles.h3}>พัก {dayCount ?? 0} วัน</Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   image: {
     flex: 1,
     width: '100%',
+    height: '100%',
     backgroundColor: '#0553',
     borderRadius: 20,
+    overflow:'hidden'
   },
-  card: {
-    width: '100%',
-    flex: 1,
-    backgroundColor: 'transparent',
-    position: 'relative'
-  },
+  card: { width: '100%', height: '100%',flex: 1, backgroundColor: 'transparent', position: 'relative' },
   eye: {
     position: 'absolute',
     zIndex: 1,
@@ -131,26 +126,12 @@ const styles = StyleSheet.create({
   },
   shadow: {
     ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 3, // เงาชี้ลง
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 10,
-      },
-
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 3.84 },
+      android: { elevation: 10 },
     }),
   },
-  buttonPressed: {
-    opacity: 0.8, // ทำให้จางลงตอนกด
-  },
-  buttonHovered: {
-    backgroundColor: '#6495ED',
-  },
-})
+  buttonPressed: { opacity: 0.8 },
+  buttonHovered: { backgroundColor: '#6495ED' },
+});
+
 export default ImgCard;

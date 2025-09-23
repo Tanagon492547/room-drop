@@ -9,7 +9,7 @@ import LineBox from "./LineBox";
 // ✨ 1. ทำให้ Props ชัดเจนและยืดหยุ่นขึ้น
 type Props = {
   nameHotel?: string;
-  nameFull?: string;
+  sellerName?: string;
   idUser?: string;
   address?: string;
   price?: number;
@@ -27,7 +27,7 @@ const ContainerCard = (props: Props) => {
     roomId: props.roomId ?? "unknown-id",
     idUser: props.idUser ?? "unknown-user",
     nameHotel: props.nameHotel ?? "ไม่มีข้อมูลโรงแรม",
-    nameFull: props.nameFull ?? "ไม่มีข้อมูลผู้ปล่อย",
+    sellerName: props.sellerName ?? "ไม่มีข้อมูลผู้ปล่อย",
     address: props.address ?? "ไม่มีข้อมูลที่อยู่",
     price: props.price ?? 0,
     url: props.url ?? "",
@@ -52,7 +52,7 @@ const ContainerCard = (props: Props) => {
             <Text style={styles.h1} numberOfLines={1}
               ellipsizeMode="tail">{displayData.nameHotel}</Text>
             <Text numberOfLines={1}
-              ellipsizeMode="tail">{displayData.nameFull}</Text>
+              ellipsizeMode="tail">{displayData.sellerName}</Text>
             <Text>ผู้ปล่อยห้อง</Text>
             <Text style={styles.p} numberOfLines={1}
               ellipsizeMode="tail">{displayData.address}</Text>

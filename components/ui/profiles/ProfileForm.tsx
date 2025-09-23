@@ -22,6 +22,7 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
   const [userFname, setUserFname] = useState("");
   const [userLname, setUserLname] = useState("");
   const [userPhone, setUserPhone] = useState("");
+  const [userEmail, setUserEmail] = useState(""); // ฝากทำให้อีเมล์ขึ้นด้วยนะ
   const [userPropPay, setUserPropPay] = useState("");
   const [urlImage, setUrlImage] = useState("");
   const [gender, setGender] = useState("");
@@ -45,6 +46,7 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
           setUserPropPay(data.promptPay || "");
           setGender(data.gender || "");
           setUrlImage(data.photoURL || "");
+          setUserEmail(data.email || "") // ฝากทำให้อีเมล์ขึ้นด้วยนะ
         }
       } catch (error) {
         console.error("โหลดข้อมูลโปรไฟล์ล้มเหลว:", error);
@@ -102,7 +104,7 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
           gender,
           telephone_number: userPhone,
           promptPay: userPropPay,
-          email,
+          email:userEmail, // ฝากทำให้อีเมล์ขึ้นด้วยนะ
           photoURL: urlImage || null,
           updatedAt: serverTimestamp(),
         },
