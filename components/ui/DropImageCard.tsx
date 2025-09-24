@@ -13,7 +13,7 @@ const blurhash =
 
 const DropImageCard = ({ url, width, height, detailCard }: props) => {
   return (
-    <View style={{ width: width ? width : 200, height: height ? height : 100 }}>
+    <View style={{ width: width ? width : 200, height: height ? height : 100, overflow:'hidden' }}>
       <Image
         style={[
           styles.image,
@@ -32,7 +32,8 @@ const styles = StyleSheet.create({
   image: {
     flex: 1,
     width: '100%',
-    backgroundColor: '#0553',
+    height: '100%',
+    backgroundColor: 'rgba(85, 0, 0, 0.2)',
   },
   borderR: {
     borderRadius: 20,

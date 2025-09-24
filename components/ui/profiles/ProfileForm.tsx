@@ -14,37 +14,42 @@ import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import * as ImagePicker from "expo-image-picker";
 
 type Props = {
-  email: string | undefined;
-  redirectAfterSave?: boolean; // 👈 new prop
+  redirectAfterSave?: boolean; // ใช้ตอน register เท่านั้น
 };
 
-const ProfileForm = ({ email, redirectAfterSave }: Props) => {
+const ProfileForm = ({ redirectAfterSave }: Props) => {
+  const [userEmail, setUserEmail] = useState<string>("");
   const [userFname, setUserFname] = useState("");
   const [userLname, setUserLname] = useState("");
   const [userPhone, setUserPhone] = useState("");
-  const [userPropPay, setUserPropPay] = useState("");
+  const [userPromptPay, setUserPromptPay] = useState("");
   const [urlImage, setUrlImage] = useState("");
   const [gender, setGender] = useState("");
   const [uploading, setUploading] = useState(false);
 
   const genders = ["ชาย", "หญิง"];
 
-  // ✅ โหลดข้อมูลเดิม
+  // ✅ โหลดข้อมูลเดิม + อีเมลจาก Auth
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const user = auth.currentUser;
         if (!user) return;
+
+        // email จาก Auth คือแหล่งความจริง
+        setUserEmail(user.email ?? "");
+
         const ref = doc(db, "profile", user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
-          const data = snap.data();
-          setUserFname(data.fname || "");
-          setUserLname(data.lname || "");
-          setUserPhone(data.telephone_number || "");
-          setUserPropPay(data.promptPay || "");
-          setGender(data.gender || "");
-          setUrlImage(data.photoURL || "");
+          const data = snap.data() as any;
+          setUserFname(data.fname ?? "");
+          setUserLname(data.lname ?? "");
+          setUserPhone(data.telephone_number ?? "");
+          setUserPromptPay(data.promptPay ?? "");
+          setGender(data.gender ?? "");
+          setUrlImage(data.photoURL ?? "");
+          // ถ้าเอกสารมี email เก่า/ผิด ให้ UI ใช้ของ Auth อยู่ดี
         }
       } catch (error) {
         console.error("โหลดข้อมูลโปรไฟล์ล้มเหลว:", error);
@@ -53,39 +58,33 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
     loadProfile();
   }, []);
 
-  const doStatusMatch = useMemo(() => {
-    return !!(userFname && userLname && userPhone && userPropPay && gender);
-  }, [userFname, userLname, userPhone, userPropPay, gender]);
-
-  const isFormReady = doStatusMatch;
+  const isFormReady = useMemo(() => {
+    return !!(userFname && userLname && userPhone && userPromptPay && gender);
+  }, [userFname, userLname, userPhone, userPromptPay, gender]);
 
   const selectingImage = async () => {
-  try {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("ต้องการสิทธิ์", "กรุณาอนุญาตเข้าถึงรูปภาพ");
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("ต้องการสิทธิ์", "กรุณาอนุญาตเข้าถึงรูปภาพ");
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
 
-    if (!result.canceled) {
-      const pickedUri = result.assets[0].uri;
-
-      // ✅ แสดงทันที
-      setUrlImage(pickedUri);
-
-    }
-  } catch (err: any) {
-    Alert.alert("ผิดพลาด", err.message);
+      if (!result.canceled) {
+        setUrlImage(result.assets[0].uri);
+      }
+    } catch (err: any) {
+      Alert.alert("ผิดพลาด", err.message);
     }
   };
- 
+
   const sendingData = async () => {
     try {
       const user = auth.currentUser;
@@ -93,6 +92,7 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
         Alert.alert("ผิดพลาด", "ไม่พบผู้ใช้ที่ล็อกอิน");
         return;
       }
+
       const ref = doc(db, "profile", user.uid);
       await setDoc(
         ref,
@@ -101,19 +101,21 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
           lname: userLname,
           gender,
           telephone_number: userPhone,
-          promptPay: userPropPay,
-          email,
+          promptPay: userPromptPay,
+          // ✅ บันทึกด้วยอีเมลจริงจาก Auth (ทับ ex@gamil.com เดิม)
+          email: user.email ?? userEmail ?? null,
           photoURL: urlImage || null,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
+
       Alert.alert("สำเร็จ", "อัปเดตข้อมูลโปรไฟล์เรียบร้อย");
 
       if (redirectAfterSave) {
-        router.replace("/login"); // 👈 only when register
+        router.replace("/login"); // ใช้ตอน register
       } else {
-        router.back(); // 👈 when editing in profile tab
+        router.back(); // ใช้ตอนแก้ไขจากแท็บโปรไฟล์
       }
     } catch (error) {
       console.error("อัปเดตโปรไฟล์ล้มเหลว:", error);
@@ -147,16 +149,57 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
             />
           </View>
 
-          <TextInput label="ชื่อ" value={userFname} onChangeText={setUserFname} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label="นามสกุล" value={userLname} onChangeText={setUserLname} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label={email} mode="outlined" disabled outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label="หมายเลขมือถือ" value={userPhone} onChangeText={setUserPhone} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label="หมายเลขพร้อมเพย์" value={userPropPay} onChangeText={setUserPropPay} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
+          <TextInput
+            label="ชื่อ"
+            value={userFname}
+            onChangeText={setUserFname}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+          />
+          <TextInput
+            label="นามสกุล"
+            value={userLname}
+            onChangeText={setUserLname}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+          />
+
+          {/* ✅ อีเมล: แสดงค่าเป็น value และปิดแก้ไข */}
+          <TextInput
+            label="อีเมล"
+            value={userEmail}
+            mode="outlined"
+            disabled
+            outlineStyle={{ borderRadius: 18 }}
+          />
+
+          <TextInput
+            label="หมายเลขมือถือ"
+            value={userPhone}
+            onChangeText={setUserPhone}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+            keyboardType="phone-pad"
+          />
+          <TextInput
+            label="หมายเลขพร้อมเพย์"
+            value={userPromptPay}
+            onChangeText={setUserPromptPay}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+            keyboardType="number-pad"
+          />
         </View>
       </View>
 
       <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", marginBlock: 40, gap: 15 }}>
-        <Button mode="contained" buttonColor="green" onPress={sendingData} disabled={!isFormReady || uploading} style={styles.button}>
+        <Button
+          mode="contained"
+          buttonColor="green"
+          onPress={sendingData}
+          disabled={!isFormReady || uploading}
+          style={styles.button}
+        >
           <FontAwesome name="check" size={20} />
         </Button>
       </View>

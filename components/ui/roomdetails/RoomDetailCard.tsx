@@ -12,8 +12,7 @@ const RoomDetailCard = ({ bedType, roomDetail, url }: props) => {
   return (
     <View style={styles.card}>
       <View style={styles.imgCard}>
-        {/* ✅ pass the url so it shows the room photo */}
-        <DropImageCard url={url} detailCard={true} width={364} height={117} />
+        <DropImageCard detailCard={true} width={382} height={117} url={url} />
         <Text style={styles.h1}>{bedType}</Text>
       </View>
       <View style={styles.detail}>
@@ -26,7 +25,7 @@ const RoomDetailCard = ({ bedType, roomDetail, url }: props) => {
 
 const styles = StyleSheet.create({
   card: { width: "100%", padding: 4, marginBlock: 9 },
-  imgCard: { backgroundColor: "#D9D9D9", marginBlockEnd: 8 },
+  imgCard: { backgroundColor: "#D9D9D9", marginBlockEnd: 8, overflow:'hidden' },
   detail: { padding: 10, gap: 10 },
   h1: { fontSize: 23, fontWeight: "bold", padding: 20 },
   h2: { fontSize: 20, fontWeight: "bold", color: colors.textBlue },
