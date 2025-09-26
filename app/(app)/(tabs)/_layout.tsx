@@ -108,6 +108,18 @@ const TabLayout =()=> {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="confirmPayment"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="bookingEvidence"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

@@ -29,7 +29,7 @@ const BookingForCard = ({ url, hotelTitle, province, roomDetail, address }: prop
           flexDirection: 'row',
           justifyContent: 'flex-end',
           marginTop: 15
-        }}><Text>รีวิว 9.9</Text></View>
+        }}></View>
       </View>
     </View>
   )

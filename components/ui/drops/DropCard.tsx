@@ -3,7 +3,16 @@ import { colors } from '@/constants/Colors';
 import { auth, db, storage } from '@/constants/firebaseConfig';
 import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+} from 'firebase/firestore';
 import { deleteObject, ref } from 'firebase/storage';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -17,6 +26,9 @@ type ListItem = {
   checkIn: string;     // room_date_checkIn
   checkOut: string;    // room_date_checkOut
   url: string;         // prefer room_photoURL, fallback to hotel_photoURL
+  pendingBookingId?: string | null;
+  pendingCount?: number;
+  status?: number;     // 0=sold out, 1=available, 2=out of date
 };
 
 const DropCard = () => {
@@ -27,17 +39,20 @@ const DropCard = () => {
 
   async function safeDeleteFile(url?: string | null) {
     if (!url || typeof url !== 'string') return;
-    // Only try deleting hosted files, ignore local file://
-    if (!url.startsWith('http')) return;
+    if (!url.startsWith('http')) return; // skip local file://
     try {
-      // ref(storage, url) accepts a gs:// or https download URL
-      await deleteObject(ref(storage, url));
+      await deleteObject(ref(storage, url)); // accepts https or gs://
     } catch (e: any) {
-      // Ignore if already gone or permission issue during dev
       console.log('safeDeleteFile skip:', e?.code || e?.message || e);
     }
   }
 
+  // Firestore "in" supports up to 10 values
+  const chunk = <T,>(arr: T[], size = 10): T[][] => {
+    const out: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+    return out;
+  };
 
   useEffect(() => {
     if (!uid) {
@@ -45,26 +60,59 @@ const DropCard = () => {
       return;
     }
 
-    const q = query(collection(db, 'rooms'), where('user_id', '==', uid));
+    const qRooms = query(collection(db, 'rooms'), where('user_id', '==', uid));
     const unsub = onSnapshot(
-      q,
+      qRooms,
       async (snap) => {
         try {
           const rooms = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
 
+          // collect hotels
           const hotelIds = Array.from(new Set(rooms.map((r) => r.hotel_id).filter(Boolean)));
-
           const hotelDocs = await Promise.all(
             hotelIds.map(async (hid) => {
               const hSnap = await getDoc(doc(db, 'hotels', hid));
               return { id: hid, data: hSnap.exists() ? hSnap.data() : null };
             })
           );
-
           const hotelMap = new Map<string, any>(hotelDocs.map((h) => [h.id, h.data]));
 
+          // collect pending bookings for these rooms (booking_status == 0)
+          const roomIds = rooms.map((r) => r.id);
+          const roomIdChunks = chunk(roomIds, 10);
+          const pendingMap = new Map<string, { firstId: string; count: number }>();
+
+          await Promise.all(
+            roomIdChunks.map(async (ids) => {
+              if (!ids.length) return;
+              const qPending = query(
+                collection(db, 'bookings'),
+                where('room_id', 'in', ids),
+                where('booking_status', '==', 0)
+              );
+              const pSnap = await getDocs(qPending);
+              const grouped: Record<string, string[]> = {};
+              pSnap.forEach((b) => {
+                const data = b.data() as any;
+                const rid: string = data.room_id;
+                (grouped[rid] ||= []).push(b.id);
+              });
+              Object.entries(grouped).forEach(([rid, ids]) => {
+                pendingMap.set(rid, { firstId: ids[0], count: ids.length });
+              });
+            })
+          );
+
+          // build items
           const items: ListItem[] = rooms.map((r) => {
             const hotel = r.hotel_id ? hotelMap.get(r.hotel_id) : null;
+            const pending = pendingMap.get(r.id);
+
+            // Coerce status (handles "0"/"1"/"2" strings)
+            const rawStatus = r.room_status;
+            const statusNum = Number(rawStatus);
+            const status = Number.isFinite(statusNum) ? statusNum : 1; // default available
+
             return {
               id: r.id,
               name: r.hotel_name || hotel?.hotel_name || 'Unknown Hotel',
@@ -72,6 +120,9 @@ const DropCard = () => {
               checkIn: r.room_date_checkIn || '',
               checkOut: r.room_date_checkOut || '',
               url: r.room_photoURL || hotel?.hotel_photoURL || '',
+              pendingBookingId: pending?.firstId ?? null,
+              pendingCount: pending?.count ?? 0,
+              status,
             };
           });
 
@@ -94,7 +145,6 @@ const DropCard = () => {
   }, [uid]);
 
   const handleEdit = (item: ListItem) => {
-    // Navigate to the same droproom page but with a query param ?roomId=...
     router.push({ pathname: '/(app)/(tabs)/droproom', params: { roomId: item.id } });
   };
 
@@ -109,11 +159,10 @@ const DropCard = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // 1) Read full room doc to get URLs and hotel_id
               const roomRef = doc(db, 'rooms', item.id);
               const roomSnap = await getDoc(roomRef);
               if (!roomSnap.exists()) {
-                await deleteDoc(roomRef); // in case it’s a ghost row
+                await deleteDoc(roomRef);
                 return;
               }
               const room = roomSnap.data() as any;
@@ -121,13 +170,11 @@ const DropCard = () => {
               const roomBillURL: string | undefined = room.room_bill;
               const hotelId: string | undefined = room.hotel_id;
 
-              // 2) If you create a hotel per room, we may clean it up if no other rooms point to it
               let isLastRoomForHotel = false;
               let hotelCoverURL: string | undefined;
 
               if (hotelId) {
                 const sibsSnap = await getDocs(query(collection(db, 'rooms'), where('hotel_id', '==', hotelId)));
-                // If only this room references that hotel, we’ll remove the hotel & its image too
                 if (sibsSnap.size <= 1) {
                   isLastRoomForHotel = true;
                   const hotelRef = doc(db, 'hotels', hotelId);
@@ -139,18 +186,14 @@ const DropCard = () => {
                 }
               }
 
-              // 3) Delete Storage files for the room
               await Promise.allSettled([
                 safeDeleteFile(roomPhotoURL),
                 safeDeleteFile(roomBillURL),
               ]);
 
-              // 4) Delete the room document
               await deleteDoc(roomRef);
 
-              // 5) Optionally, clean up hotel if unused
               if (hotelId && isLastRoomForHotel) {
-                // delete hotel cover image then hotel doc
                 await safeDeleteFile(hotelCoverURL);
                 await deleteDoc(doc(db, 'hotels', hotelId));
               }
@@ -164,6 +207,31 @@ const DropCard = () => {
     );
   };
 
+  const goApprove = (item: ListItem) => {
+    if (!item.pendingBookingId) return;
+    router.push({
+      pathname: '/(app)/(tabs)/confirmPayment',
+      params: { roomId: item.id, bookingId: item.pendingBookingId },
+    });
+  };
+
+  const renderStatusPill = (status?: number) => {
+    // 0 = sold out (green), 1 = available (gray), 2 = out of date (red)
+    let label = 'Available';
+    let bg = '#9CA3AF';   // gray
+    if (status === 0) {
+      label = 'Sold out';
+      bg = '#16A34A';     // green
+    } else if (status === 2) {
+      label = 'Out of date';
+      bg = '#EF4444';     // red
+    }
+    return (
+      <View style={[styles.statusPill, { backgroundColor: bg }]}>
+        <Text style={styles.statusText}>{label}</Text>
+      </View>
+    );
+  };
 
   return (
     <SwipeListView
@@ -175,7 +243,15 @@ const DropCard = () => {
           </View>
           <View>
             <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.p}>{item.location}</Text>
+
+            {/* Location (left) + Status pill (right) */}
+            <View style={styles.rowBetween}>
+              <Text style={styles.p} numberOfLines={1}>
+                {item.location}
+              </Text>
+              {renderStatusPill(item.status)}
+            </View>
+
             <View style={{ gap: 5 }}>
               <View style={[styles.boxContext]}>
                 <FontAwesome name="calendar-check-o" size={20} color="#000000ff" />
@@ -186,6 +262,17 @@ const DropCard = () => {
                 <Text style={styles.p2}>{item.checkOut}</Text>
               </View>
             </View>
+
+            {/* Approve button only when there is at least one pending booking */}
+            {item.pendingCount && item.pendingCount > 0 ? (
+              <View style={{ alignItems: 'flex-end', marginTop: 8 }}>
+                <TouchableOpacity style={styles.approveBtn} onPress={() => goApprove(item)}>
+                  <Text style={styles.approveText}>
+                    {item.pendingCount > 1 ? `Approve (${item.pendingCount})` : 'Approve'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </View>
         </View>
       )}
@@ -264,6 +351,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 5,
   },
+  // new: location + status row
+  rowBetween: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  // new: status pill
+  statusPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  // existing: approve button
+  approveBtn: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  approveText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.3,
+  },
 });
 
 export default DropCard;
+
+
