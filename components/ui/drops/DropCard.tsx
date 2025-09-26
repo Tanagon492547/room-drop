@@ -1,19 +1,13 @@
+// DropCard.tsx
 import { colors } from '@/constants/Colors';
 import { auth, db } from '@/constants/firebaseConfig';
 import { FontAwesome } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { collection, deleteDoc, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import DropImageCard from '../DropImageCard';
-
-import {
-  collection,
-  doc,
-  getDoc,
-  onSnapshot,
-  query,
-  where,
-} from 'firebase/firestore';
 
 type ListItem = {
   id: string;
@@ -24,20 +18,10 @@ type ListItem = {
   url: string;         // prefer room_photoURL, fallback to hotel_photoURL
 };
 
-const handleEdit = (item: ListItem) => {
-  Alert.alert('แก้ไข', `คุณกำลังจะแก้ไข: ${item.name}`);
-};
-
-const handleDelete = (item: ListItem) => {
-  Alert.alert('ลบ', `คุณแน่ใจหรือไม่ว่าจะลบ: ${item.name}`);
-  // (Optional) delete logic here
-};
-
 const DropCard = () => {
   const [listData, setListData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // derive the current user id
   const uid = useMemo(() => auth.currentUser?.uid ?? null, []);
 
   useEffect(() => {
@@ -46,19 +30,15 @@ const DropCard = () => {
       return;
     }
 
-    // listen to rooms for current user
     const q = query(collection(db, 'rooms'), where('user_id', '==', uid));
     const unsub = onSnapshot(
       q,
       async (snap) => {
         try {
-          // fetch all related hotel docs (by hotel_id) and merge
           const rooms = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
 
-          // build a unique set of hotel_ids
           const hotelIds = Array.from(new Set(rooms.map((r) => r.hotel_id).filter(Boolean)));
 
-          // fetch all hotel docs in parallel
           const hotelDocs = await Promise.all(
             hotelIds.map(async (hid) => {
               const hSnap = await getDoc(doc(db, 'hotels', hid));
@@ -66,12 +46,8 @@ const DropCard = () => {
             })
           );
 
-          // map for quick lookup
-          const hotelMap = new Map<string, any>(
-            hotelDocs.map((h) => [h.id, h.data])
-          );
+          const hotelMap = new Map<string, any>(hotelDocs.map((h) => [h.id, h.data]));
 
-          // build list items for your UI
           const items: ListItem[] = rooms.map((r) => {
             const hotel = r.hotel_id ? hotelMap.get(r.hotel_id) : null;
             return {
@@ -102,6 +78,35 @@ const DropCard = () => {
     return () => unsub();
   }, [uid]);
 
+  const handleEdit = (item: ListItem) => {
+    // Navigate to the same droproom page but with a query param ?roomId=...
+    router.push({ pathname: '/(app)/(tabs)/droproom', params: { roomId: item.id } });
+  };
+
+  const handleDelete = (item: ListItem) => {
+    Alert.alert(
+      'Delete room',
+      `Are you sure you want to delete "${item.name}"? This can’t be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'rooms', item.id));
+              // (Optional) If you created a unique hotel doc per room and want to remove it too,
+              // you can also delete the hotel here—only if you’re sure it’s not shared.
+            } catch (e) {
+              console.error('Delete failed:', e);
+              Alert.alert('Error', 'Failed to delete room.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.visibleItem, { justifyContent: 'center', height: 120 }]}>
@@ -113,7 +118,6 @@ const DropCard = () => {
   return (
     <SwipeListView
       data={listData}
-      // visible card
       renderItem={({ item }) => (
         <View style={styles.visibleItem}>
           <View>
@@ -135,20 +139,19 @@ const DropCard = () => {
           </View>
         </View>
       )}
-      // hidden menu
       renderHiddenItem={({ item }) => (
         <View style={styles.hiddenItemContainer}>
           <TouchableOpacity
             style={[styles.hiddenButton, styles.editButton]}
             onPress={() => handleEdit(item)}
           >
-            <Text style={styles.buttonText}>แก้ไข</Text>
+            <Text style={styles.buttonText}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.hiddenButton, styles.deleteButton]}
             onPress={() => handleDelete(item)}
           >
-            <Text style={styles.buttonText}>ลบ</Text>
+            <Text style={styles.buttonText}>Delete</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -166,7 +169,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    display: 'flex',
     flexDirection: 'row',
     gap: 10,
     height: 165,
@@ -207,7 +209,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   boxContext: {
-    display: 'flex',
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
