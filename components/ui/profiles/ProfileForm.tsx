@@ -18,49 +18,46 @@ type Props = {
 };
 
 const ProfileForm = ({ redirectAfterSave }: Props) => {
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [userEmail, setUserEmail] = useState("");
   const [userFname, setUserFname] = useState("");
   const [userLname, setUserLname] = useState("");
   const [userPhone, setUserPhone] = useState("");
   const [userPromptPay, setUserPromptPay] = useState("");
-  const [urlImage, setUrlImage] = useState("");
+  const [urlImage, setUrlImage] = useState("");   // can be file:// or https://
   const [gender, setGender] = useState("");
   const [uploading, setUploading] = useState(false);
 
   const genders = ["ชาย", "หญิง"];
 
-  // ✅ โหลดข้อมูลเดิม + อีเมลจาก Auth
   useEffect(() => {
-    const loadProfile = async () => {
+    (async () => {
       try {
         const user = auth.currentUser;
         if (!user) return;
 
-        // email จาก Auth คือแหล่งความจริง
         setUserEmail(user.email ?? "");
 
         const ref = doc(db, "profile", user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
-          const data = snap.data() as any;
-          setUserFname(data.fname ?? "");
-          setUserLname(data.lname ?? "");
-          setUserPhone(data.telephone_number ?? "");
-          setUserPromptPay(data.promptPay ?? "");
-          setGender(data.gender ?? "");
-          setUrlImage(data.photoURL ?? "");
-          // ถ้าเอกสารมี email เก่า/ผิด ให้ UI ใช้ของ Auth อยู่ดี
+          const d = snap.data() as any;
+          setUserFname(d.fname ?? "");
+          setUserLname(d.lname ?? "");
+          setUserPhone(d.telephone_number ?? "");
+          setUserPromptPay(d.promptPay ?? "");
+          setGender(d.gender ?? "");
+          setUrlImage(d.photoURL ?? "");
         }
-      } catch (error) {
-        console.error("โหลดข้อมูลโปรไฟล์ล้มเหลว:", error);
+      } catch (err) {
+        console.error("Load profile failed:", err);
       }
-    };
-    loadProfile();
+    })();
   }, []);
 
-  const isFormReady = useMemo(() => {
-    return !!(userFname && userLname && userPhone && userPromptPay && gender);
-  }, [userFname, userLname, userPhone, userPromptPay, gender]);
+  const isFormReady = useMemo(
+    () => !!(userFname && userLname && userPhone && userPromptPay && gender),
+    [userFname, userLname, userPhone, userPromptPay, gender]
+  );
 
   const selectingImage = async () => {
     try {
@@ -69,17 +66,13 @@ const ProfileForm = ({ redirectAfterSave }: Props) => {
         Alert.alert("ต้องการสิทธิ์", "กรุณาอนุญาตเข้าถึงรูปภาพ");
         return;
       }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,
       });
-
-      if (!result.canceled) {
-        setUrlImage(result.assets[0].uri);
-      }
+      if (!result.canceled) setUrlImage(result.assets[0].uri);
     } catch (err: any) {
       Alert.alert("ผิดพลาด", err.message);
     }
@@ -92,10 +85,15 @@ const ProfileForm = ({ redirectAfterSave }: Props) => {
         Alert.alert("Error", "No logged-in user");
         return;
       }
-
       setUploading(true);
 
-      const httpsPhotoURL = await ensureUploaded(urlImage, () => `users/${user.uid}/profile.jpg`);
+      // Upload only if it's a local file URI
+      let httpsPhotoURL = urlImage;
+      if (urlImage && urlImage.startsWith("file://")) {
+        httpsPhotoURL = await ensureUploaded(urlImage, () => `users/${user.uid}/profile.jpg`);
+        // update local state so preview shows the hosted URL immediately
+        if (httpsPhotoURL) setUrlImage(httpsPhotoURL);
+      }
 
       await setDoc(
         doc(db, "profile", user.uid),
@@ -106,17 +104,17 @@ const ProfileForm = ({ redirectAfterSave }: Props) => {
           telephone_number: userPhone,
           promptPay: userPromptPay,
           email: user.email ?? null,
-          photoURL: httpsPhotoURL, // <- now HTTPS or null
+          photoURL: httpsPhotoURL || null,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
 
       Alert.alert("Success", "Profile updated");
-      if (redirectAfterSave) router.replace("/login"); else router.back();
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Error", "Could not update profile");
+      redirectAfterSave ? router.replace("/login") : router.back();
+    } catch (e: any) {
+      console.log("Profile save error:", { code: e?.code, message: e?.message, name: e?.name });
+      Alert.alert("Error", e?.message ?? "Could not update profile");
     } finally {
       setUploading(false);
     }
