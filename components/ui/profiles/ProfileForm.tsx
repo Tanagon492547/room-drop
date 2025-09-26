@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import RNPickerSelect from "react-native-picker-select";
+import { ensureUploaded } from '../../../src/lib/uploadImage';
 import AvatarProfile from "./AvatarProfile";
-
 // ✅ Firebase
 import { auth, db } from "@/constants/firebaseConfig";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
@@ -89,37 +89,36 @@ const ProfileForm = ({ redirectAfterSave }: Props) => {
     try {
       const user = auth.currentUser;
       if (!user) {
-        Alert.alert("ผิดพลาด", "ไม่พบผู้ใช้ที่ล็อกอิน");
+        Alert.alert("Error", "No logged-in user");
         return;
       }
 
-      const ref = doc(db, "profile", user.uid);
+      setUploading(true);
+
+      const httpsPhotoURL = await ensureUploaded(urlImage, () => `users/${user.uid}/profile.jpg`);
+
       await setDoc(
-        ref,
+        doc(db, "profile", user.uid),
         {
           fname: userFname,
           lname: userLname,
           gender,
           telephone_number: userPhone,
           promptPay: userPromptPay,
-          // ✅ บันทึกด้วยอีเมลจริงจาก Auth (ทับ ex@gamil.com เดิม)
-          email: user.email ?? userEmail ?? null,
-          photoURL: urlImage || null,
+          email: user.email ?? null,
+          photoURL: httpsPhotoURL, // <- now HTTPS or null
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
 
-      Alert.alert("สำเร็จ", "อัปเดตข้อมูลโปรไฟล์เรียบร้อย");
-
-      if (redirectAfterSave) {
-        router.replace("/login"); // ใช้ตอน register
-      } else {
-        router.back(); // ใช้ตอนแก้ไขจากแท็บโปรไฟล์
-      }
-    } catch (error) {
-      console.error("อัปเดตโปรไฟล์ล้มเหลว:", error);
-      Alert.alert("ผิดพลาด", "ไม่สามารถอัปเดตโปรไฟล์ได้");
+      Alert.alert("Success", "Profile updated");
+      if (redirectAfterSave) router.replace("/login"); else router.back();
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Could not update profile");
+    } finally {
+      setUploading(false);
     }
   };
 
