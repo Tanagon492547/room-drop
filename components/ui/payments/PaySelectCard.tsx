@@ -7,24 +7,21 @@ import CreditCardForm from "./CreditCardForm";
 import PromptPayForm from "./PromptPayForm";
 
 type props = {
-  name?: string,
-  phoneNumber?: string,
   roomId?: string,
-  nameHotel?: string,
 }
 
-const PaySelectCard = ({ name, phoneNumber, roomId, nameHotel }: props) => {
+const PaySelectCard = ({ roomId }: props) => {
   const [selectedMethod, setSelectedMethod] = useState(true);
   const [status, setStatus] = useState(false); //เช็คสถานะการจ่ายเงิน เเล้วหรือไม่
   const [promptpay, setPromptpay] = useState('0820492004');
-  const [price, setPrice] = useState(300)
+  const [price, setPrice] = useState(300) //ใส่ราคาตรงนี้
 
   const goToBillPaymentScreen = () => {
     console.log('ไปดูบิลของ', roomId)
 
-    if(!roomId){
-        return;
-      }
+    if (!roomId) {
+      return;
+    }
 
     router.replace({
       pathname: '/(app)/(tabs)/bills/[roomId]',
@@ -73,7 +70,7 @@ const PaySelectCard = ({ name, phoneNumber, roomId, nameHotel }: props) => {
 
       </View>
       <View style={[styles.payBox, styles.shadow]}>
-        {selectedMethod && (<PromptPayForm  promptpay={promptpay} price={price} />)}
+        {selectedMethod && (<PromptPayForm promptpay={promptpay} price={price} />)}
         {!selectedMethod && (<CreditCardForm />)}
       </View>
 
