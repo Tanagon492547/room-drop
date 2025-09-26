@@ -31,7 +31,13 @@ const DropCard = () => {
   const [listData, setListData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const uid = useMemo(() => auth.currentUser?.uid ?? null, []);
-  const [status, setStatus] = useState(0); //สถานะการขาย จำรองไว้ เก็บค่าเป็นตัวเลขนะ
+  const [status, setStatus] = useState(1); //สถานะการขาย จำรองไว้ เก็บค่าเป็นตัวเลขนะ
+
+  const checkinStatsBill =  () =>{
+    if(status === 1){
+      console.log('ดูสลิปที่นี่')
+    }
+  }
 
   useEffect(() => {
     if (!uid) {
@@ -135,6 +141,7 @@ const DropCard = () => {
           </View>
           <View style={{width: 140 }}>
             <Pressable
+              onPress={checkinStatsBill}
               style={[styles.status,
               status === 0 && (styles.isSold),
               status === 1 && (styles.isActive),
