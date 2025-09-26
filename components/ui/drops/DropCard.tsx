@@ -5,7 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { collection, deleteDoc, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import DropImageCard from '../DropImageCard';
 
@@ -18,11 +18,26 @@ type ListItem = {
   url: string;         // prefer room_photoURL, fallback to hotel_photoURL
 };
 
+const truncateText = (text: any, maxLength: any) => {
+  // ถ้าข้อความไม่ยาวเกิน ก็ให้แสดงผลปกติ
+  if (text.length <= maxLength) {
+    return text;
+  }
+  // ถ้าข้อความยาวเกิน ให้ตัดแล้วต่อท้ายด้วย ...
+  return text.substring(0, maxLength) + '...';
+};
+
 const DropCard = () => {
   const [listData, setListData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
-
   const uid = useMemo(() => auth.currentUser?.uid ?? null, []);
+  const [status, setStatus] = useState(1); //สถานะการขาย จำรองไว้ เก็บค่าเป็นตัวเลขนะ
+
+  const checkinStatsBill =  () =>{
+    if(status === 1){
+      console.log('ดูสลิปที่นี่')
+    }
+  }
 
   useEffect(() => {
     if (!uid) {
@@ -114,18 +129,32 @@ const DropCard = () => {
       </View>
     );
   }
+  const MAX_CHAR_LIMIT = 13; // <-- 2. กำหนดจำนวนตัวอักษรสูงสุดที่นี่
 
   return (
     <SwipeListView
       data={listData}
       renderItem={({ item }) => (
         <View style={styles.visibleItem}>
-          <View>
-            <DropImageCard url={item.url} />
+          <View style={styles.img}>
+            <DropImageCard url={item.url} height={125} />
           </View>
-          <View>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.p}>{item.location}</Text>
+          <View style={{width: 140 }}>
+            <Pressable
+              onPress={checkinStatsBill}
+              style={[styles.status,
+              status === 0 && (styles.isSold),
+              status === 1 && (styles.isActive),
+              status === 2 && (styles.isExpired)
+              ]}>
+              <Text style={styles.statusText}>
+                  {status === 0 && 'ขายแล้ว'}
+                  {status === 1 && 'กำลังขาย'}
+                  {status === 2 && 'หมดอายุ'}
+              </Text>
+            </Pressable>
+            <Text style={styles.itemName} numberOfLines={1} ellipsizeMode="tail" >{truncateText(item.name, MAX_CHAR_LIMIT)}</Text>
+            <Text style={styles.p} numberOfLines={1} ellipsizeMode="tail">{truncateText(item.location, MAX_CHAR_LIMIT)}</Text>
             <View style={{ gap: 5 }}>
               <View style={[styles.boxContext]}>
                 <FontAwesome name="calendar-check-o" size={20} color="#000000ff" />
@@ -158,6 +187,7 @@ const DropCard = () => {
       keyExtractor={(item) => item.id}
       rightOpenValue={-150}
       disableRightSwipe
+      // disableLeftSwipe
       style={{ width: '100%' }}
     />
   );
@@ -172,6 +202,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     height: 165,
+    justifyContent:'space-between'
   },
   itemName: {
     fontSize: 18,
@@ -214,6 +245,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 5,
   },
+  img: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems:'center',
+    width:'100%',
+  },
+  status: {
+    width: '100%',
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  isSold: {
+    backgroundColor: colors.success
+  },
+  isActive: {
+    backgroundColor: colors.yellow
+  },
+  isExpired: {
+    backgroundColor: colors.info
+  },
+  statusText:{
+    color:'white'
+  }
 });
 
 export default DropCard;

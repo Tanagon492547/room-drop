@@ -17,7 +17,7 @@ const DropPing = () => {
     return (
         <View style={{ width: '100%', flex: 1, alignItems: 'center', position: 'relative' }}>
             <TitleText textTitle='Dropping' />
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, width:'100%' }}>
                 <DropCard />
             </View>
             <Pressable style={({ hovered, pressed }) => [
@@ -38,8 +38,8 @@ const styles = StyleSheet.create({
     plus: {
         backgroundColor: colors.primaryPlus,
         display: 'flex',
-        paddingBlock: 5,
-        paddingHorizontal: 10,
+        paddingBlock: 10,
+        paddingHorizontal: 15,
         borderRadius: 100,
         justifyContent: 'center',
         alignItems: 'center',
