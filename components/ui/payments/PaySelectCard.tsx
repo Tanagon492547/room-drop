@@ -16,6 +16,8 @@ type props = {
 const PaySelectCard = ({ name, phoneNumber, roomId, nameHotel }: props) => {
   const [selectedMethod, setSelectedMethod] = useState(true);
   const [status, setStatus] = useState(false); //เช็คสถานะการจ่ายเงิน เเล้วหรือไม่
+  const [promptpay, setPromptpay] = useState('0820492004');
+  const [price, setPrice] = useState(300)
 
   const goToBillPaymentScreen = () => {
     console.log('ไปดูบิลของ', roomId)
@@ -71,7 +73,7 @@ const PaySelectCard = ({ name, phoneNumber, roomId, nameHotel }: props) => {
 
       </View>
       <View style={[styles.payBox, styles.shadow]}>
-        {selectedMethod && (<PromptPayForm />)}
+        {selectedMethod && (<PromptPayForm  promptpay={promptpay} price={price} />)}
         {!selectedMethod && (<CreditCardForm />)}
       </View>
 

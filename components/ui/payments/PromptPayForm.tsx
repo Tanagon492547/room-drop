@@ -1,6 +1,11 @@
 import { StyleSheet, Text, View } from "react-native";
 
-const PromptPayForm = () =>{
+type props = {
+  promptpay?: string, // พร้อมเพย์คนขาย
+  price?: number, //ราคา
+}
+
+const PromptPayForm = ({promptpay, price}:props) =>{
   return(
     <View style={styles.card}>
       <Text>PromptPayForm</Text>
