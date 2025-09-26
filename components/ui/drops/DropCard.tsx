@@ -1,9 +1,10 @@
 // DropCard.tsx
 import { colors } from '@/constants/Colors';
-import { auth, db } from '@/constants/firebaseConfig';
+import { auth, db, storage } from '@/constants/firebaseConfig';
 import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { collection, deleteDoc, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
+import { deleteObject, ref } from 'firebase/storage';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -38,6 +39,20 @@ const DropCard = () => {
       console.log('ดูสลิปที่นี่')
     }
   }
+
+  async function safeDeleteFile(url?: string | null) {
+    if (!url || typeof url !== 'string') return;
+    // Only try deleting hosted files, ignore local file://
+    if (!url.startsWith('http')) return;
+    try {
+      // ref(storage, url) accepts a gs:// or https download URL
+      await deleteObject(ref(storage, url));
+    } catch (e: any) {
+      // Ignore if already gone or permission issue during dev
+      console.log('safeDeleteFile skip:', e?.code || e?.message || e);
+    }
+  }
+
 
   useEffect(() => {
     if (!uid) {
@@ -109,10 +124,52 @@ const DropCard = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteDoc(doc(db, 'rooms', item.id));
-              // (Optional) If you created a unique hotel doc per room and want to remove it too,
-              // you can also delete the hotel here—only if you’re sure it’s not shared.
-            } catch (e) {
+              // 1) Read full room doc to get URLs and hotel_id
+              const roomRef = doc(db, 'rooms', item.id);
+              const roomSnap = await getDoc(roomRef);
+              if (!roomSnap.exists()) {
+                await deleteDoc(roomRef); // in case it’s a ghost row
+                return;
+              }
+              const room = roomSnap.data() as any;
+              const roomPhotoURL: string | undefined = room.room_photoURL;
+              const roomBillURL: string | undefined = room.room_bill;
+              const hotelId: string | undefined = room.hotel_id;
+
+              // 2) If you create a hotel per room, we may clean it up if no other rooms point to it
+              let isLastRoomForHotel = false;
+              let hotelCoverURL: string | undefined;
+
+              if (hotelId) {
+                const sibsSnap = await getDocs(query(collection(db, 'rooms'), where('hotel_id', '==', hotelId)));
+                // If only this room references that hotel, we’ll remove the hotel & its image too
+                if (sibsSnap.size <= 1) {
+                  isLastRoomForHotel = true;
+                  const hotelRef = doc(db, 'hotels', hotelId);
+                  const hotelSnap = await getDoc(hotelRef);
+                  if (hotelSnap.exists()) {
+                    const hotel = hotelSnap.data() as any;
+                    hotelCoverURL = hotel.hotel_photoURL;
+                  }
+                }
+              }
+
+              // 3) Delete Storage files for the room
+              await Promise.allSettled([
+                safeDeleteFile(roomPhotoURL),
+                safeDeleteFile(roomBillURL),
+              ]);
+
+              // 4) Delete the room document
+              await deleteDoc(roomRef);
+
+              // 5) Optionally, clean up hotel if unused
+              if (hotelId && isLastRoomForHotel) {
+                // delete hotel cover image then hotel doc
+                await safeDeleteFile(hotelCoverURL);
+                await deleteDoc(doc(db, 'hotels', hotelId));
+              }
+            } catch (e: any) {
               console.error('Delete failed:', e);
               Alert.alert('Error', 'Failed to delete room.');
             }

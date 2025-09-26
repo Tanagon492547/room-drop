@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Button } from "react-native-paper";
+import { ensureUploaded } from '../../../src/lib/uploadImage';
 
 // Firebase
 import { auth, db } from "@/constants/firebaseConfig";
@@ -102,7 +103,7 @@ const RoomForm = () => {
             router.back();
           }
         } else {
-           resetForm();
+          resetForm();
         }
       } catch (e) {
         console.error("Load failed:", e);
@@ -137,16 +138,32 @@ const RoomForm = () => {
       setSubmitting(true);
 
       if (isEdit && typeof roomId === "string") {
-        // --- UPDATE ---
-        // (Optional) recompute & persist dayCount if you want:
-        // const dayCount = diffDaysDMY(room_date_checkIn, room_date_checkOut);
+        // -------- EDIT MODE --------
+        // Upload only if local file://
+        const httpsHotelPhoto = await ensureUploaded(
+          hotel_photoURL,
+          () => `hotels/${hotelId ?? 'unknown'}/cover.jpg`
+        );
+        const httpsRoomPhoto = await ensureUploaded(
+          room_photoURL,
+          () => `rooms/${roomId}/room.jpg`
+        );
+        const httpsRoomBill = await ensureUploaded(
+          room_bill,
+          () => `rooms/${roomId}/bill.jpg`
+        );
+
+        // Update local state so UI previews switch to HTTPS
+        if (httpsHotelPhoto) setHotelPhoto(httpsHotelPhoto);
+        if (httpsRoomPhoto) setRoomPhoto(httpsRoomPhoto);
+        if (httpsRoomBill) setRoomBill(httpsRoomBill);
 
         // Update hotel (if known)
         if (hotelId) {
           await updateDoc(doc(db, "hotels", hotelId), {
             hotel_name,
             hotel_location,
-            hotel_photoURL,
+            hotel_photoURL: httpsHotelPhoto ?? hotel_photoURL ?? null,
             updatedAt: serverTimestamp(),
           });
         }
@@ -158,49 +175,84 @@ const RoomForm = () => {
           room_price: Number(room_price ?? 0),
           room_date_checkIn,
           room_date_checkOut,
-          room_photoURL,
-          room_bill,
+          room_photoURL: httpsRoomPhoto ?? room_photoURL ?? null,
+          room_bill: httpsRoomBill ?? room_bill ?? null,
           hotel_name,
-          // hotel_id: hotelId, // (keep existing unless you allow switching)
           updatedAt: serverTimestamp(),
         });
 
         Alert.alert("Success", "Room updated.");
       } else {
-        // --- ADD ---
+        // -------- ADD MODE --------
+        // 1) Create hotel & room docs first to get IDs
         const hotelRef = await addDoc(collection(db, "hotels"), {
           hotel_name,
           hotel_location,
-          hotel_photoURL,
+          hotel_photoURL: null,
           createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         });
 
-        await addDoc(collection(db, "rooms"), {
+        const roomRef = await addDoc(collection(db, "rooms"), {
           room_name,
           room_description,
           room_price: Number(room_price ?? 0),
           room_date_checkIn,
           room_date_checkOut,
-          room_photoURL,
-          room_bill,
+          room_photoURL: null,
+          room_bill: null,
           room_status,
           hotel_id: hotelRef.id,
           hotel_name,
           user_id: user.uid,
           createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         });
+
+        // 2) Upload images to stable paths
+        const httpsHotelPhoto = await ensureUploaded(
+          hotel_photoURL,
+          () => `hotels/${hotelRef.id}/cover.jpg`
+        );
+        const httpsRoomPhoto = await ensureUploaded(
+          room_photoURL,
+          () => `rooms/${roomRef.id}/room.jpg`
+        );
+        const httpsRoomBill = await ensureUploaded(
+          room_bill,
+          () => `rooms/${roomRef.id}/bill.jpg`
+        );
+
+        // Update local state so UI previews switch to HTTPS (if you stay on the page)
+        if (httpsHotelPhoto) setHotelPhoto(httpsHotelPhoto);
+        if (httpsRoomPhoto) setRoomPhoto(httpsRoomPhoto);
+        if (httpsRoomBill) setRoomBill(httpsRoomBill);
+
+        // 3) Patch docs with the HTTPS URLs
+        await Promise.all([
+          updateDoc(hotelRef, {
+            hotel_photoURL: httpsHotelPhoto ?? null,
+            updatedAt: serverTimestamp(),
+          }),
+          updateDoc(roomRef, {
+            room_photoURL: httpsRoomPhoto ?? null,
+            room_bill: httpsRoomBill ?? null,
+            updatedAt: serverTimestamp(),
+          }),
+        ]);
 
         Alert.alert("Success", "Room posted.");
       }
 
       router.replace("/(app)/(tabs)/dropping");
-    } catch (error) {
-      console.error("Submit failed:", error);
-      Alert.alert("Error", "Failed to submit room.");
+    } catch (error: any) {
+      console.error("Submit failed:", { code: error?.code, message: error?.message, name: error?.name });
+      Alert.alert("Error", error?.message ?? "Failed to submit room.");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <View style={styles.form}>
