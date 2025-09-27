@@ -1,20 +1,27 @@
+// app/_layout.tsx
 import { SessionProvider } from '@/hooks/useAuth';
-
 import { Stack } from 'expo-router';
+import * as React from 'react';
+import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-//เป็นต้นกำเนิด root ทั้งหมด จะเเส้งทุกอย่าง
-const Root = () => {
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: '#314071',
+  },
+};
 
+export default function Root() {
   return (
-    //<SessionProvider>
-    //  <Slot />
-    //</SessionProvider>
-
-    <SessionProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </SessionProvider>
+    <SafeAreaProvider>
+      <PaperProvider theme={theme}>
+        <SessionProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </SessionProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
-
-export default Root;
