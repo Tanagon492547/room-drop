@@ -10,6 +10,28 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const mapAuthError = (code?: string) => {
+  switch (code) {
+    case "auth/invalid-email":
+      return "Invalid email address.";
+    case "auth/missing-password":
+    case "auth/weak-password":
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+      return "Incorrect email or password.";
+    case "auth/user-not-found":
+      return "No account found with this email.";
+    case "auth/user-disabled":
+      return "This account has been disabled.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please try again later.";
+    case "auth/network-request-failed":
+      return "Network error. Check your connection.";
+    default:
+      return "Login failed. Please try again.";
+  }
+};
+
 const SignIn = () => {
   const { signIn } = useSession();
   const [email, setEmail] = useState('');
@@ -20,20 +42,20 @@ const SignIn = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleLogin = async () => {
-     setErrorMsg(null);
+    setErrorMsg(null);
+
     if (!email.trim() || !password) {
       setErrorMsg("Please fill email and password.");
       return;
     }
+
     try {
       setSubmitting(true);
-      await signIn(email.trim(), password);   // ✅ ให้ hook จัดการ Firebase และ idToken
-      // Remember me: ถ้าอยากทำจริง ให้เก็บ flag ไว้ใน AsyncStorage เพิ่มเองได้
-      router.replace('/');                    // ✅ (app)/_layout จะกัน route ให้เอง
+      await signIn(email.trim(), password);
+      router.replace('/');
     } catch (error: any) {
-      // แสดงข้อความสั้นๆ ที่เป็นมิตร
-      const msg = error?.message ?? "Login failed. Please try again.";
-      setErrorMsg(msg);
+      const friendly = mapAuthError(error?.code);
+      setErrorMsg(friendly);
       console.log("Login error:", error);
     } finally {
       setSubmitting(false);
@@ -47,23 +69,44 @@ const SignIn = () => {
           <View style={styles.textArea}>
             <Text style={styles.h1}>Login</Text>
           </View>
-          <View>
-            <TextInput style={styles.inputCSS} placeholder="Email" value={email} onChangeText={(email)=>{setEmail(email)}} />
-            <View style={{ position: 'relative' }}>
 
-              <TextInput 
-              style={styles.inputCSS} 
-              placeholder="password" 
-              secureTextEntry={!isPasswordVisible}
-              value={password}
-              onChangeText={(password)=>{setPassword(password)}}
+          {/* Error banner */}
+          {errorMsg ? (
+            <View style={styles.errorBanner}>
+              <FontAwesome name="exclamation-circle" size={16} color="#7f1d1d" />
+              <Text style={styles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
+
+          <View>
+            <TextInput
+              style={styles.inputCSS}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              inputMode="email"
+            />
+
+            <View style={{ position: 'relative' }}>
+              <TextInput
+                style={styles.inputCSS}
+                placeholder="Password"
+                secureTextEntry={!isPasswordVisible}
+                value={password}
+                onChangeText={setPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
-                onPress={() => setIsPasswordVisible(!isPasswordVisible)} // <-- กดเพื่อสลับ state
+                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                disabled={submitting}
               >
                 <FontAwesome
-                  name={isPasswordVisible ? 'eye-slash' : 'eye'} // <-- สลับชื่อไอคอน
+                  name={isPasswordVisible ? 'eye-slash' : 'eye'}
                   size={22}
                   color="grey"
                 />
@@ -74,7 +117,7 @@ const SignIn = () => {
           <View style={styles.forgotandRemeberMe}>
             <Pressable
               style={styles.checkboxContainer}
-              onPress={() => setChecked(!isChecked)} // <-- ทำให้กดที่ข้อความได้ด้วย
+              onPress={() => setChecked(!isChecked)}
             >
               <Checkbox
                 value={isChecked}
@@ -83,14 +126,19 @@ const SignIn = () => {
               />
               <Text>Remember me</Text>
             </Pressable>
+
+            {/* TODO: wire this to your real forgot-password flow */}
             <Link href="/">
-              <Text style={{}}>
-                Forgot password?
-              </Text>
+              <Text>Forgot password?</Text>
             </Link>
           </View>
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.h2}>Login</Text>
+
+          <TouchableOpacity
+            style={[styles.button, submitting && { opacity: 0.7 }]}
+            onPress={handleLogin}
+            disabled={submitting}
+          >
+            <Text style={styles.h2}>{submitting ? "Logging in..." : "Login"}</Text>
           </TouchableOpacity>
 
           <AuthNavigationPrompt
@@ -102,14 +150,11 @@ const SignIn = () => {
           <AuthSeparator />
 
           <SocialAuth />
-
         </View>
       </View>
-
     </SafeAreaView>
-
   );
-}
+};
 
 const styles = StyleSheet.create({
   loginBg: {
@@ -137,47 +182,64 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: 278,
     height: 44,
-    paddingInlineStart: 20,
-    paddingInlineEnd: 50,
+    paddingLeft: 20,
+    paddingRight: 50,
     fontWeight: '600',
-    marginBlock: 10,
+    marginVertical: 10,
+    backgroundColor: 'white',
   },
   eyeIcon: {
-    position: 'absolute', // <-- ทำให้ไอคอนลอยได้
-    right: 20, // <-- จัดตำแหน่งไปทางขวา
-    top: 20
-
+    position: 'absolute',
+    right: 20,
+    top: 10,
+    height: 44,
+    justifyContent: 'center',
   },
   checkboxContainer: {
-    display: 'flex',
     flexDirection: 'row',
-    gap: 5
+    gap: 5,
+    alignItems: 'center',
   },
   loginCard: {
     width: '80%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
     alignItems: 'center'
   },
   forgotandRemeberMe: {
-    display: 'flex',
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-between',
     paddingHorizontal: 2,
-    marginBlock: 10,
+    marginVertical: 10,
   },
   button: {
     backgroundColor: colors.info,
     paddingHorizontal: 40,
-    paddingBlock: 5,
-    marginBlock: 10,
+    paddingVertical: 8,
+    marginVertical: 10,
     borderRadius: 30,
   },
   textArea: {
-    marginBlock: 20
-  }
-}
-)
+    marginVertical: 20,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fee2e2',
+    borderColor: '#fecaca',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+    width: 278,
+  },
+  errorText: {
+    color: '#7f1d1d',
+    flexShrink: 1,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});
+
 export default SignIn;

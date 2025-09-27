@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import RNPickerSelect from "react-native-picker-select";
+import { ensureUploaded } from '../../../src/lib/uploadImage';
 import AvatarProfile from "./AvatarProfile";
-
 // ✅ Firebase
 import { auth, db } from "@/constants/firebaseConfig";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
@@ -14,110 +14,109 @@ import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import * as ImagePicker from "expo-image-picker";
 
 type Props = {
-  email: string | undefined;
-  redirectAfterSave?: boolean; // 👈 new prop
+  redirectAfterSave?: boolean; // ใช้ตอน register เท่านั้น
 };
 
-const ProfileForm = ({ email, redirectAfterSave }: Props) => {
+const ProfileForm = ({ redirectAfterSave }: Props) => {
+  const [userEmail, setUserEmail] = useState("");
   const [userFname, setUserFname] = useState("");
   const [userLname, setUserLname] = useState("");
   const [userPhone, setUserPhone] = useState("");
-  const [userPropPay, setUserPropPay] = useState("");
-  const [urlImage, setUrlImage] = useState("");
+  const [userPromptPay, setUserPromptPay] = useState("");
+  const [urlImage, setUrlImage] = useState("");   // can be file:// or https://
   const [gender, setGender] = useState("");
   const [uploading, setUploading] = useState(false);
 
   const genders = ["ชาย", "หญิง"];
 
-  // ✅ โหลดข้อมูลเดิม
   useEffect(() => {
-    const loadProfile = async () => {
+    (async () => {
       try {
         const user = auth.currentUser;
         if (!user) return;
+
+        setUserEmail(user.email ?? "");
+
         const ref = doc(db, "profile", user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
-          const data = snap.data();
-          setUserFname(data.fname || "");
-          setUserLname(data.lname || "");
-          setUserPhone(data.telephone_number || "");
-          setUserPropPay(data.promptPay || "");
-          setGender(data.gender || "");
-          setUrlImage(data.photoURL || "");
+          const d = snap.data() as any;
+          setUserFname(d.fname ?? "");
+          setUserLname(d.lname ?? "");
+          setUserPhone(d.telephone_number ?? "");
+          setUserPromptPay(d.promptPay ?? "");
+          setGender(d.gender ?? "");
+          setUrlImage(d.photoURL ?? "");
         }
-      } catch (error) {
-        console.error("โหลดข้อมูลโปรไฟล์ล้มเหลว:", error);
+      } catch (err) {
+        console.error("Load profile failed:", err);
       }
-    };
-    loadProfile();
+    })();
   }, []);
 
-  const doStatusMatch = useMemo(() => {
-    return !!(userFname && userLname && userPhone && userPropPay && gender);
-  }, [userFname, userLname, userPhone, userPropPay, gender]);
-
-  const isFormReady = doStatusMatch;
+  const isFormReady = useMemo(
+    () => !!(userFname && userLname && userPhone && userPromptPay && gender),
+    [userFname, userLname, userPhone, userPromptPay, gender]
+  );
 
   const selectingImage = async () => {
-  try {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("ต้องการสิทธิ์", "กรุณาอนุญาตเข้าถึงรูปภาพ");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      const pickedUri = result.assets[0].uri;
-
-      // ✅ แสดงทันที
-      setUrlImage(pickedUri);
-
-    }
-  } catch (err: any) {
-    Alert.alert("ผิดพลาด", err.message);
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("ต้องการสิทธิ์", "กรุณาอนุญาตเข้าถึงรูปภาพ");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (!result.canceled) setUrlImage(result.assets[0].uri);
+    } catch (err: any) {
+      Alert.alert("ผิดพลาด", err.message);
     }
   };
- 
+
   const sendingData = async () => {
     try {
       const user = auth.currentUser;
       if (!user) {
-        Alert.alert("ผิดพลาด", "ไม่พบผู้ใช้ที่ล็อกอิน");
+        Alert.alert("Error", "No logged-in user");
         return;
       }
-      const ref = doc(db, "profile", user.uid);
+      setUploading(true);
+
+      // Upload only if it's a local file URI
+      let httpsPhotoURL = urlImage;
+      if (urlImage && urlImage.startsWith("file://")) {
+        httpsPhotoURL = await ensureUploaded(urlImage, () => `users/${user.uid}/profile.jpg`);
+        // update local state so preview shows the hosted URL immediately
+        if (httpsPhotoURL) setUrlImage(httpsPhotoURL);
+      }
+
       await setDoc(
-        ref,
+        doc(db, "profile", user.uid),
         {
           fname: userFname,
           lname: userLname,
           gender,
           telephone_number: userPhone,
-          promptPay: userPropPay,
-          email,
-          photoURL: urlImage || null,
+          promptPay: userPromptPay,
+          email: user.email ?? null,
+          photoURL: httpsPhotoURL || null,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
-      Alert.alert("สำเร็จ", "อัปเดตข้อมูลโปรไฟล์เรียบร้อย");
 
-      if (redirectAfterSave) {
-        router.replace("/login"); // 👈 only when register
-      } else {
-        router.back(); // 👈 when editing in profile tab
-      }
-    } catch (error) {
-      console.error("อัปเดตโปรไฟล์ล้มเหลว:", error);
-      Alert.alert("ผิดพลาด", "ไม่สามารถอัปเดตโปรไฟล์ได้");
+      Alert.alert("Success", "Profile updated");
+      redirectAfterSave ? router.replace("/login") : router.back();
+    } catch (e: any) {
+      console.log("Profile save error:", { code: e?.code, message: e?.message, name: e?.name });
+      Alert.alert("Error", e?.message ?? "Could not update profile");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -147,16 +146,57 @@ const ProfileForm = ({ email, redirectAfterSave }: Props) => {
             />
           </View>
 
-          <TextInput label="ชื่อ" value={userFname} onChangeText={setUserFname} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label="นามสกุล" value={userLname} onChangeText={setUserLname} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label={email} mode="outlined" disabled outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label="หมายเลขมือถือ" value={userPhone} onChangeText={setUserPhone} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
-          <TextInput label="หมายเลขพร้อมเพย์" value={userPropPay} onChangeText={setUserPropPay} mode="outlined" outlineStyle={{ borderRadius: 18 }} />
+          <TextInput
+            label="ชื่อ"
+            value={userFname}
+            onChangeText={setUserFname}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+          />
+          <TextInput
+            label="นามสกุล"
+            value={userLname}
+            onChangeText={setUserLname}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+          />
+
+          {/* ✅ อีเมล: แสดงค่าเป็น value และปิดแก้ไข */}
+          <TextInput
+            label="อีเมล"
+            value={userEmail}
+            mode="outlined"
+            disabled
+            outlineStyle={{ borderRadius: 18 }}
+          />
+
+          <TextInput
+            label="หมายเลขมือถือ"
+            value={userPhone}
+            onChangeText={setUserPhone}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+            keyboardType="phone-pad"
+          />
+          <TextInput
+            label="หมายเลขพร้อมเพย์"
+            value={userPromptPay}
+            onChangeText={setUserPromptPay}
+            mode="outlined"
+            outlineStyle={{ borderRadius: 18 }}
+            keyboardType="number-pad"
+          />
         </View>
       </View>
 
       <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", marginBlock: 40, gap: 15 }}>
-        <Button mode="contained" buttonColor="green" onPress={sendingData} disabled={!isFormReady || uploading} style={styles.button}>
+        <Button
+          mode="contained"
+          buttonColor="green"
+          onPress={sendingData}
+          disabled={!isFormReady || uploading}
+          style={styles.button}
+        >
           <FontAwesome name="check" size={20} />
         </Button>
       </View>
