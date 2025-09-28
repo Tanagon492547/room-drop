@@ -213,13 +213,6 @@ const FormCard = () => {
     <View style={styles.inputArea}>
       {/* Location with choices */}
       <View style={styles.inputBox}>
-        <FontAwesome
-          name="search"
-          size={25}
-          color="#6C6C6C"
-          style={{ position: "absolute", zIndex: 1, paddingLeft: 15 }}
-          pointerEvents="none"
-        />
         <TouchableOpacity activeOpacity={0.9} onPress={() => setShowLocationModal(true)}>
           <TextInput
             label="Choose Location..."
