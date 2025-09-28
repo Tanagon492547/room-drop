@@ -6,8 +6,8 @@ import { useSession } from "@/hooks/useAuth";
 import { FontAwesome } from '@expo/vector-icons';
 import Checkbox from "expo-checkbox";
 import { Link, router } from "expo-router";
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const mapAuthError = (code?: string) => {
@@ -57,6 +57,11 @@ const SignIn = () => {
       const friendly = mapAuthError(error?.code);
       setErrorMsg(friendly);
       console.log("Login error:", error);
+      
+       Alert.alert(
+      'Login Failed', // Title
+      `Error Code: ${error.code}\n\nMessage: ${error.message}` // Message
+    );
     } finally {
       setSubmitting(false);
     }
