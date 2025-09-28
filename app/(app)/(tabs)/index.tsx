@@ -3,6 +3,7 @@ import { View } from "@/components/Themed";
 import ContainerCard from "@/components/ui/homes/ContainerCard";
 import { db } from "@/constants/firebaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from '@react-navigation/native';
 import {
   collection,
   doc,
@@ -11,7 +12,7 @@ import {
   query,
   updateDoc,
 } from "firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -124,6 +125,31 @@ export default function TabOneScreen() {
       }
     })();
   }, []);
+
+   useFocusEffect(
+    React.useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        try {
+          const raw = await AsyncStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const s = JSON.parse(raw);
+          if (!cancelled) {
+            setSearch({
+              location: s.text ?? null,
+              checkIn: s.checkIn ?? null,
+              checkOut: s.checkOut ?? null,
+              priceMin: s.priceMin ?? null,
+              priceMax: s.priceMax ?? null,
+            });
+          }
+        } catch (e) {
+          console.warn('Failed to refresh search state on focus', e);
+        }
+      })();
+      return () => { cancelled = true; };
+    }, [])
+  );
 
   // โหลด rooms และ join profiles/hotels (เหมือนเดิม)
   useEffect(() => {
