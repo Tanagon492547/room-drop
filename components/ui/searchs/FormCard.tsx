@@ -3,6 +3,7 @@ import { colors } from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, FlatList, Platform, StyleSheet, TouchableOpacity } from "react-native";
 import { Button, Divider, List, Modal, Portal, TextInput } from "react-native-paper";
@@ -68,6 +69,7 @@ const OPTIONS = [
 const onlyDigits = (s: string) => s.replace(/[^\d]/g, "");
 
 const FormCard = () => {
+  const router = useRouter();
   const [text, setText] = useState(""); // Location (เลือกจากรายการ)
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
@@ -159,7 +161,21 @@ const FormCard = () => {
       Alert.alert("Price range error", "Minimum price should be less than or equal to maximum price.");
       return;
     }
-    onSearch();
+    const payload = {
+      text,
+      priceMin,
+      priceMax,
+      checkIn: checkInDate ? checkInDate.toISOString() : null,
+      checkOut: checkOutDate ? checkOutDate.toISOString() : null,
+      updatedAt: Date.now(),
+    };
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('Failed to save form', e);
+    }
+
+    await onSearch();
 
     console.log({
       location: text,
@@ -168,6 +184,7 @@ const FormCard = () => {
       priceMin: min,
       priceMax: max,
     });
+    router.navigate('/');
   };
 
   async function onSearch() {
