@@ -1,14 +1,14 @@
-// services/searchRooms.ts
 import {
-    collection,
-    DocumentData,
-    getDocs, getFirestore,
-    limit,
-    orderBy,
-    query,
-    QueryConstraint,
-    startAfter,
-    where
+  collection,
+  DocumentData,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  QueryConstraint,
+  startAfter,
+  where
 } from 'firebase/firestore';
 
 export type SearchParams = {
@@ -46,9 +46,9 @@ export async function searchRoomsFirebase(params: SearchParams) {
     minPrice, maxPrice, pageSize = 20, pageCursor = null
   } = params;
 
-  // 1) คิวรี candidate rooms
+  // --- Step 1: query candidate rooms ---
   const constraints: QueryConstraint[] = [
-    where('room_status', '==', 1),
+    where('room_status', '==', 1),  // 1 = available
   ];
 
   if (typeof minPrice === 'number' || typeof maxPrice === 'number') {
@@ -59,38 +59,46 @@ export async function searchRoomsFirebase(params: SearchParams) {
   }
 
   if (location && location.trim()) {
-    // ต้องมี rooms.hotel_location (denormalize)
+    // ต้องมี field hotel_location ใน rooms
     constraints.push(where('hotel_location', '==', location.trim()));
   }
 
-  // เรียง+เพจจิ้ง (เลือกคีย์เรียงที่มีดัชนี เช่น room_price หรือ createdAt)
   constraints.push(orderBy('room_price', 'asc'));
   constraints.push(limit(pageSize));
   if (pageCursor) constraints.push(startAfter(pageCursor));
 
   const roomsSnap = await getDocs(query(collection(db, 'rooms'), ...constraints));
 
-  // 2) สำหรับแต่ละ room ตรวจ overlap booking (waiting|approved) — filter ฝั่ง client
   const out: { rooms: Room[]; last: DocumentData | null } = { rooms: [], last: null };
 
+  // --- Step 2: check booking overlap ---
   for (const doc of roomsSnap.docs) {
-    const r = { room_id: doc.id, ...doc.data() } as unknown as Room;
+    const data = doc.data();
 
-    // ถาม bookings ของห้องนี้ที่อาจทับช่วง (query แบบ 2 inequality + สถานะ)
+    const r: Room = {
+      room_id: doc.id,
+      room_name: data.room_name,
+      room_description: data.room_description,
+      room_price: data.room_price,
+      room_photoURL: data.room_photoURL,
+      room_status: data.room_status,
+      hotel_id: data.hotel_id,
+      hotel_name: data.hotel_name,
+      hotel_location: data.hotel_location,
+    };
+
+    // query bookings ของห้องนี้
     const bookingsQ = query(
       collection(db, 'bookings'),
       where('room_id', '==', r.room_id),
-      where('booking_status', 'in', [0, 1]),
-      // overlap: check_in < req_checkOut AND check_out > req_checkIn
+      where('booking_status', 'in', [0, 1]),   // 0 = waiting, 1 = approved
       where('check_in', '<', checkOut),
       where('check_out', '>', checkIn)
     );
 
     const bSnap = await getDocs(bookingsQ);
 
-    // ถ้ามีอย่างน้อย 1 record → ทับช่วง → ไม่นำเข้าผลลัพธ์
     if (!bSnap.empty) {
-      // safety ชั้นสุดท้าย เผื่อ device เวลาไม่ตรง
       const blocking = bSnap.docs.some(bd => {
         const b = bd.data();
         return rangesOverlap(
@@ -99,12 +107,12 @@ export async function searchRoomsFirebase(params: SearchParams) {
           checkIn, checkOut
         );
       });
-      if (blocking) continue;
+      if (blocking) continue; // ❌ booked → ข้ามห้องนี้
     }
 
     out.rooms.push(r);
   }
 
   out.last = roomsSnap.docs.length ? roomsSnap.docs[roomsSnap.docs.length - 1] : null;
-  return out; // { rooms, last } → เอา last ไปเป็น pageCursor ครั้งถัดไป
+  return out;
 }
