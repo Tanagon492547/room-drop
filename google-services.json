@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "412166929349",
+    "project_id": "test-project-3485e",
+    "storage_bucket": "test-project-3485e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:412166929349:android:97169ba79d494d8c2329ac",
+        "android_client_info": {
+          "package_name": "com.tanagon2547.roomdrop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcqg64bADFTvl5Ty6EOGKhMHdeE8LAVBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
