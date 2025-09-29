@@ -61,6 +61,7 @@ const SignIn = () => {
        Alert.alert(
       'Login Failed', // Title
       `Error Code: ${error.code}\n\nMessage: ${error.message}` // Message
+      
     );
     } finally {
       setSubmitting(false);
