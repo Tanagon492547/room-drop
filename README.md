@@ -6,9 +6,9 @@
 
 *เร็วๆ นี้\! เพิ่มรูปภาพตัวอย่างสวยๆ ของแอปพลิเคชันคุณที่นี่ได้เลย*
 
-| หน้า Login | หน้า Home | หน้ารายละเอียด |
-| :---- | :---- | :---- |
-|  <img src="./screenshots/login-screen.jpg" width="200">  |  <img src="./screenshots/home-screen.jpg" width="200">  |  <img src="./screenshots/detail-screen.jpg" width="200">  |
+| **หน้า Login** | **หน้า Home** | **หน้ารายละเอียด** |
+| :---: | :---: | :---: |
+| <img src="./screenshots/login-screen.jpg" width="200"> | <img src="./screenshots/home-screen.jpg" width="200"> | <img src="./screenshots/detail-screen.jpg" width="200"> |
 
 ## **🚀 Features (คุณสมบัติ)**
 
@@ -39,25 +39,39 @@
 ### **การติดตั้ง (Installation)**
 
 1. **Clone the repository:**  
-   git clone \[https://github.com/Tanagon492547/room-drop.git\](https://github.com/Tanagon492547/room-drop.git)
+ ` ` `CMD 
+ git clone \[https://github.com/Tanagon492547/room-drop.git\](https://github.com/Tanagon492547/room-drop.git) " 
+ ` ` `
 
 2. **Navigate to the project directory:**  
+
+` ` `CMD
    cd room-drop
+` ` `
 
 3. **Install dependencies:**  
+
+` ` `CMD
    npm install
+` ` `
 
 4. **Setup Environment Variables:**  
    * สร้างไฟล์ใหม่ที่ root ของโปรเจกต์ชื่อว่า **.env**  
    * คัดลอก "กุญแจ" ต่าง ๆ จากโปรเจกต์ Firebase ของคุณมาใส่ในไฟล์ .env ตามรูปแบบนี้:  
+
+   ` ` `CMD
      EXPO\_PUBLIC\_FIREBASE\_API\_KEY="YOUR\_API\_KEY"  
      EXPO\_PUBLIC\_FIREBASE\_AUTH\_DOMAIN="YOUR\_AUTH\_DOMAIN"  
      EXPO\_PUBLIC\_FIREBASE\_PROJECT\_ID="YOUR\_PROJECT\_ID"  
      EXPO\_PUBLIC\_FIREBASE\_STORAGE\_BUCKET="YOUR\_STORAGE\_BUCKET"  
      EXPO\_PUBLIC\_FIREBASE\_MESSAGING\_SENDER\_ID="YOUR\_MESSAGING\_SENDER\_ID"  
      EXPO\_PUBLIC\_FIREBASE\_APP\_ID="YOUR\_APP\_ID"
+  ` ` `
 
 5. **Run the application:**  
+
+` ` `CMD
    npx expo start
+` ` `
 
    จากนั้นสแกน QR Code ด้วยแอป Expo Go บนมือถือของคุณ
