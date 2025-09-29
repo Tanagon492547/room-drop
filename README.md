@@ -10,68 +10,63 @@
 | :---: | :---: | :---: |
 | <img src="./screenshots/login-screen.jpg" width="200"> | <img src="./screenshots/home-screen.jpg" width="200"> | <img src="./screenshots/detail-screen.jpg" width="200"> |
 
-## **🚀 Features (คุณสมบัติ)**
+## **🚀 คุณสมบัติ (Features)**
 
-* **Authentication:** สมัครสมาชิกและล็อกอินด้วย Firebase Authentication  
-* **Room Listings:** ดูรายการห้องพักทั้งหมด  
-* **Search & Filter:** ค้นหาและกรองห้องพัก  
-* **Booking System:** ระบบการจองห้องพัก  
-* **Room Management:** เพิ่ม, แก้ไข, และลบห้องพักของตัวเอง  
-* **User Profiles:** จัดการข้อมูลส่วนตัวของผู้ใช้
+* **Authentication**: สมัครสมาชิกและเข้าสู่ระบบด้วย Firebase Authentication
+* **Room Listings**: ดูรายการห้องพักทั้งหมด
+* **Search & Filter**: ค้นหาและกรองห้องพักตามเงื่อนไขที่ต้องการ
+* **Booking System**: ระบบการจองห้องพัก
+* **Room Management**: เพิ่ม, แก้ไข และลบข้อมูลห้องพักของตัวเอง
+* **User Profiles**: จัดการข้อมูลส่วนตัวของผู้ใช้งาน
 
-## **🛠️ Tech Stack (เทคโนโลยีที่ใช้)**
+---
 
-* **Framework:** React Native (Expo)  
-* **Routing:** Expo Router  
-* **Backend & Database:** Firebase (Authentication, Firestore)  
-* **UI Library:** React Native Paper  
-* **State Management:** Zustand  
-* **Language:** TypeScript
+## **🛠️ เทคโนโลยีที่ใช้ (Tech Stack)**
 
-## **🏁 Getting Started (การติดตั้งและเริ่มใช้งาน)**
+* **Framework**: React Native (Expo)
+* **Routing**: Expo Router
+* **Backend & Database**: Firebase (Authentication, Firestore)
+* **UI Library**: React Native Paper
+* **State Management**: Zustand
+* **Language**: TypeScript
 
-### **สิ่งที่ต้องมีก่อน (Prerequisites)**
+---
 
-* [Node.js](https://nodejs.org/) (เวอร์ชัน 18 ขึ้นไป)  
-* [Git](https://git-scm.com/)  
-* [Expo Go app](https://expo.dev/go) บนมือถือ iOS หรือ Android
+## **🏁 การติดตั้งและเริ่มต้นใช้งาน (Getting Started)**
 
-### **การติดตั้ง (Installation)**
+### **สิ่งที่ต้องมี (Prerequisites)**
 
-1. **Clone the repository:**  
- ` ` `CMD 
- git clone \[https://github.com/Tanagon492547/room-drop.git\](https://github.com/Tanagon492547/room-drop.git) " 
- ` ` `
+* **Node.js** (เวอร์ชัน 18 ขึ้นไป)
+* **Git**
+* แอป **Expo Go** บนมือถือ iOS หรือ Android ของคุณ
 
-2. **Navigate to the project directory:**  
+### **ขั้นตอนการติดตั้ง (Installation Steps)**
 
-` ` `CMD
-   cd room-drop
-` ` `
-
-3. **Install dependencies:**  
-
-` ` `CMD
-   npm install
-` ` `
-
-4. **Setup Environment Variables:**  
-   * สร้างไฟล์ใหม่ที่ root ของโปรเจกต์ชื่อว่า **.env**  
-   * คัดลอก "กุญแจ" ต่าง ๆ จากโปรเจกต์ Firebase ของคุณมาใส่ในไฟล์ .env ตามรูปแบบนี้:  
-
-   ` ` `CMD
-     EXPO\_PUBLIC\_FIREBASE\_API\_KEY="YOUR\_API\_KEY"  
-     EXPO\_PUBLIC\_FIREBASE\_AUTH\_DOMAIN="YOUR\_AUTH\_DOMAIN"  
-     EXPO\_PUBLIC\_FIREBASE\_PROJECT\_ID="YOUR\_PROJECT\_ID"  
-     EXPO\_PUBLIC\_FIREBASE\_STORAGE\_BUCKET="YOUR\_STORAGE\_BUCKET"  
-     EXPO\_PUBLIC\_FIREBASE\_MESSAGING\_SENDER\_ID="YOUR\_MESSAGING\_SENDER\_ID"  
-     EXPO\_PUBLIC\_FIREBASE\_APP\_ID="YOUR\_APP\_ID"
-  ` ` `
-
-5. **Run the application:**  
-
-` ` `CMD
-   npx expo start
-` ` `
-
-   จากนั้นสแกน QR Code ด้วยแอป Expo Go บนมือถือของคุณ
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/Tanagon492547/room-drop.git](https://github.com/Tanagon492547/room-drop.git)
+    ```
+2.  **Navigate to the project directory:**
+    ```bash
+    cd room-drop
+    ```
+3.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+4.  **Setup Environment Variables:**
+    * สร้างไฟล์ชื่อ **.env** ที่ root ของโปรเจกต์
+    * คัดลอก "กุญแจ" ต่างๆ จากโปรเจกต์ Firebase ของคุณมาใส่ในไฟล์ **.env** ตามรูปแบบด้านล่าง:
+        ```env
+        EXPO_PUBLIC_FIREBASE_API_KEY="YOUR_API_KEY"
+        EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN="YOUR_AUTH_DOMAIN"
+        EXPO_PUBLIC_FIREBASE_PROJECT_ID="YOUR_PROJECT_ID"
+        EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET="YOUR_STORAGE_BUCKET"
+        EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="YOUR_MESSAGING_SENDER_ID"
+        EXPO_PUBLIC_FIREBASE_APP_ID="YOUR_APP_ID"
+        ```
+5.  **Run the application:**
+    ```bash
+    npx expo start
+    ```
+    หลังจากนั้นให้สแกน **QR Code** ที่ปรากฏขึ้นบนหน้าจอด้วยแอป **Expo Go** บนมือถือของคุณได้
