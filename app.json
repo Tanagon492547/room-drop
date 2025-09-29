@@ -22,8 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.tanagon2547.roomdrop",
-      "edgeToEdgeEnabled": true,
-      "googleServicesFile": "./google-services.json"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
@@ -38,9 +37,7 @@
       [
         "expo-build-properties",
         {
-          "android": {
-            "googleServicesFile": "./google-services.json"
-          }
+          "android": {}
         }
       ]
     ],
