@@ -50,8 +50,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d259b252-e42a-43b0-8c65-b9be3ff534d1"
+        "projectId": "0b3a455f-e8d9-4c21-b5dd-d1e516d9ec20"
       }
-    }
+    },
+    "owner": "maiko2004"
   }
 }
