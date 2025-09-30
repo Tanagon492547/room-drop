@@ -1,4 +1,3 @@
-// hooks/useAuth.ts
 import { auth } from '@/firebase/auth';
 import {
   signOut as fbSignOut,
