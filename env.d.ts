@@ -1,4 +1,3 @@
-// for TypeScript to recognize the environment variables
 declare namespace NodeJS {
   interface ProcessEnv {
     EXPO_PUBLIC_FIREBASE_API_KEY: string;
