@@ -1,4 +1,3 @@
-// constants/firebaseConfig.ts
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import { FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
 import {
@@ -8,7 +7,6 @@ import {
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// 🔑 Config values from Expo .env
 export const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN!,
@@ -19,16 +17,13 @@ export const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID, // optional
 };
 
-// ✅ Initialize Firebase app
 export const app: FirebaseApp =
   getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// ✅ Use React Native AsyncStorage persistence for Auth
 export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 
-// ✅ Firestore
 export const db = getFirestore(app);
 
 export const storage = getStorage(app);
